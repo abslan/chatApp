@@ -1,0 +1,9 @@
+
+.userchats{
+    padding: 1rem;
+    padding-right: 0rem;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    box-sizing: border-box;
+}

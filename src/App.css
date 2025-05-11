@@ -1,0 +1,53 @@
+#App {
+  text-align: center;
+  padding-right: 1.5rem;
+  padding-left: 0.5rem;
+}
+
+.dark_theme{
+  background-color: rgb(14, 44, 105);
+}
+
+
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+
+.neon-red {
+  --neon: #FF5161;
+  --neon-glow: #D30302;
+}
+
+.neon-pink {
+  --neon: #FF53cd;
+  --neon-glow: #e10361;
+}
+
+.neon-purple {
+  --neon: #9461fd;
+  --neon-glow: #4003e6;
+}
+
+.neon-blue {
+  --neon: #2dd9fe;
+  --neon-glow: #00a3d5;
+}
+
+.neon-green {
+  --neon: #00fe9b;
+  --neon-glow: #02c435;
+}
+
+.neon-yellow {
+  --neon: #ffdb4e;
+  --neon-glow: #b48505;
+}
+
+.neon-white {
+  --neon: #fefefe;
+  --neon-glow: #ffffff;
+}

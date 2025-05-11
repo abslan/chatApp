@@ -1,0 +1,123 @@
+1. for dummy data or for firebase db use following format , contains user details  
+{
+    users : [
+            uid1 : {
+                name : "user1",
+                img : "img_url",
+                user_name : "user1",
+                isOnline : false,
+                conversations : [
+                    uid2 : [ 
+                        {message : "msg1" , timestamp : "00:01"},
+                        {message : "msg1" , timestamp : "00:01"},
+                        {message : "msg1" , timestamp : "00:01"},
+                    ]
+                ],
+                conversations_groups : [convo_gid1, convo_gid2]
+            }
+        ],
+    conversations_groups : [
+         {
+            id: convo_gid1,
+            users : [uid1, uid2, uid3],
+            admins : [uid1, uid2],
+            messages : [ 
+                {data : "msg1" , timestamp : "00:01", user_id : "uid1"},
+                {data : "msg1" , timestamp : "00:01", user_id : "uid1"},
+                {data : "msg1" , timestamp : "00:01", user_id : "uid1"},
+            ]
+        },
+    ]
+}
+
+2. Pages
+    1. /home - should provide login & register funcitonality
+    2. /register - registration
+    3. /user_name - page when user logged in, contains conversations and other funcitonality
+    
+    
+3. Components-
+    1. Navbar 
+        - contains search input box - search for conversations
+        - Logout user
+    2. conversations - side section - container
+        - Subcomponents
+            1. Header - title & Add a group conversation
+            2. Conversation_Card(user)
+    3. ChatBox
+        - Subcomponents
+            1. Navbar 
+                - image of users(clustered) in conversation, 
+                - Names of members
+                - add icon - add members to group - only works for admins
+                - info - should open members info component
+                - search input box for searching messages - can be in info compoenet 
+                    - should highlight message component
+            2. info
+                - Subcomponents
+                    - Info card - shows image, name, isOnline and (remove icon - only shown for admin)
+                    - search input to show messages
+                        - this will show all filtered messages
+                    - delete group - might not require
+            3. message 
+                - should show message, image of user, isOnline & timestamp
+                    - if its loggedin user message should be on right, else on left
+                - note that data can be image, link, file, text, gif.
+            4.  Footer
+                - Attachment icon
+                - Type box
+                - emoji icon to select emojis
+                - gif icon to select gifs
+                - send button
+                - Is typing - shows if someone is typing
+                
+
+CHATAPP TODO 
+    - create json file DONE
+    - create all components starting from home
+    - show page with some logged in user instead of authentication
+    - learn load and unload data from a file
+
+
+Update version
+    - add firebase for loading data & authentication, update authentication page
+
+
+
+updated todo:
+
+1. sending messages
+2. message types css : 
+    group changes
+    user changes
+3. add duo conversation 
+4. add group conversation
+5. timestamp
+6. delete message funcitonality
+8. emojis to react to message
+7. image more when clicked show users
+
+8. alert box in chatbox itself should appear and disapper when alert message 
+
+css todo:
+outline to conversations alice blue & white
+
+pages:
+Home  basic
+
+Home advance firebase & user details enter page
+
+
+6. set a timestamp and encrypt and decrypt messages after that
+7. convo_id - set count and update convo_id accordingly or use firebase
+
+8. add swipe gesture
+
+    
+
+                
+
+
+
+
+
