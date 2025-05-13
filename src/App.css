@@ -1,7 +1,9 @@
 #App {
   text-align: center;
-  padding-right: 1.5rem;
-  padding-left: 0.5rem;
+  /* padding-right: 1.5rem;
+  padding-left: 0.5rem; */
+  height: 100svh;
+  width: 100svw;
 }
 
 .dark_theme{

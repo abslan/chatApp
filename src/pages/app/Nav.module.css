@@ -5,6 +5,7 @@
     justify-content: space-between;
     align-items: center;
     margin-left: 0.5rem;
+    margin-right: 0.5rem;
 
     /* light theme */
     --text-color1 : black;

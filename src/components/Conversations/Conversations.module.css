@@ -6,7 +6,9 @@
 .conversations_container{
     flex-direction: column;
     width: 30%;
-    min-width: 350px;
+    min-width: 160px;
+    overflow-x: hidden;
+    overflow-y: scroll;
 
     /* light theme */
     --header-text : black;
