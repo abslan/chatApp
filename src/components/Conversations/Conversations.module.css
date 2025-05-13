@@ -3,6 +3,14 @@
     --image-size : 3rem;
   }
 
+
+@media (max-width:400px){
+    .user_details{
+        width: 0px;
+        visibility: hidden;
+    }
+}
+
 .conversations_container{
     flex-direction: column;
     width: 30%;
