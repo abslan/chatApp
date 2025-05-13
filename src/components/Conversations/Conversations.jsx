@@ -15,7 +15,8 @@ function LastMessage({item}){
     switch (item.type) {
         case 'image':
         //   return <img className={styles.last_message_img} src={item.value} alt=""/>;
-            return <p className={styles.last_message_img}>{item.value}</p>
+            // return <p className={styles.last_message_img}>{item.value}</p>
+            return <p></p>
   
         case 'link':
           return (

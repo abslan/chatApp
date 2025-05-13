@@ -61,13 +61,13 @@ export const data = {
             messages : [ 
                 {msg_id : "convo_gid1_1", data : { type: 'text', value: 'Hello, this is a text message.' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "rihanna", delete_for: []},
                 {msg_id : "convo_gid1_2", data : { type: 'link', value: 'https://www.example.com', label: 'Visit Example' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "beyonce", delete_for: []},
-                {msg_id : "convo_gid1_3", data : { type: 'image', value: 'image-url.jpg' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "edsheeran", delete_for: []},
+                {msg_id : "convo_gid1_3", data : { type: 'image', value: url+"/images/cat.jpeg" } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "edsheeran", delete_for: []},
                 {msg_id : "convo_gid1_4", data : { type: 'text', value: 'Hello, this is a text message.' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "taylorswift", delete_for: []},
                 {msg_id : "convo_gid1_5", data : { type: 'link', value: 'https://www.example.com', label: 'Visit Example' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "beyonce", delete_for: []},
-                {msg_id : "convo_gid1_6", data : { type: 'image', value: 'image-url.jpg' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "edsheeran", delete_for: []},
+                {msg_id : "convo_gid1_6", data : { type: 'image', value: url+"/images/cat.jpeg" } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "edsheeran", delete_for: []},
                 {msg_id : "convo_gid1_7", data : { type: 'text', value: 'Hello, this is a text message.' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "rihanna", delete_for: []},
                 {msg_id : "convo_gid1_8", data : { type: 'link', value: 'https://www.example.com', label: 'Visit Example' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "beyonce", delete_for: []},
-                {msg_id : "convo_gid1_9", data : { type: 'image', value: 'image-url.jpg' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "taylorswift", delete_for: []},
+                {msg_id : "convo_gid1_9", data : { type: 'image', value: url+"/images/cat.jpeg" } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "taylorswift", delete_for: []},
             ]
         },
     },
@@ -80,7 +80,7 @@ export const data = {
            messages : [ 
                {   msg_id : "rihanna_taylorswift_1" ,data : { type: 'text', value: 'Hello, this is a text message.' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "rihanna", delete_for: ["rihanna"]},
                {   msg_id : "rihanna_taylorswift_2"  ,data : { type: 'link', value: 'https://www.example.com', label: 'Visit Example' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "taylorswift", delete_for: []},
-               {   msg_id : "rihanna_taylorswift_3" , data : { type: 'image', value: 'image-url.jpg' }
+               {   msg_id : "rihanna_taylorswift_3" , data : { type: 'image', value: url+"/images/cat.jpeg" }
                 , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "taylorswift", delete_for: []},
            ]
        },
@@ -99,7 +99,7 @@ export const data = {
 
 
 
-// { type: 'image', value: 'image-url.jpg' },
+// { type: 'image', value: url+"/images/cat.jpeg" },
 //     { type: 'link', value: 'https://www.example.com', label: 'Visit Example' },
 //     { type: 'text', value: 'Hello, this is a text message.' },
 //chat app todo : add function to render different data types user messages remain
