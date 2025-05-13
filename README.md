@@ -14,6 +14,7 @@ The app demonstrates conversation creation, search, and message interaction, all
 ## ✨ Features<br>
 
 - 📋 View all conversations with last message preview<br>
+- 👆 Swipe left on a user or group card to hide conversation<br>
 - 🔍 Search conversations by contact name<br>
 - ➕ Create new conversation with a contact<br>
 - 💬 View and send messages in a conversation<br>
