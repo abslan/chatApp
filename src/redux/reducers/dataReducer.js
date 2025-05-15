@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
-
 import { data } from "../../data";
+
+import { createSelector } from "@reduxjs/toolkit";
 
 // const INITIAL_STATE = data;
 export const dataSlice = createSlice({
@@ -284,9 +285,64 @@ export const convoGroupSelector = (state) => state.dataReducer.conversations_gro
 export const convoDuoSelector = (state) => state.dataReducer.conversations_duo;
 export const sessionDetailsSelector = (state) => state.dataReducer.session_details;
 
-
 export const selectUserById = (userId) => (state) => state.dataReducer.users[userId];
-export const currentUserSelector = (state) => state.dataReducer.session_details.current_user_details.id;
+export const selectUsersByIds = (userIds) => (state) => userIds.map(id => state.dataReducer.users[id]);
+export const selectUserFriends = (userId) => (state) => state.dataReducer.users[userId].friends;
+
+// export const selectUsersPreviewByIds = (userIds) => (state) =>
+//   userIds.map(id => {
+//     const user = state.dataReducer.users[id];
+//     return user ? { user_id: id, img: user.img, user_name: user.user_name } : null;
+//   });
+
+//reselect selectors for caching
+export const makeSelectUsersPreviewByIds = () => createSelector(
+  [
+    usersSelector,
+    (state, userIds) => userIds,
+  ],
+  (users, userIds) => {
+    // map userIds to user preview objects
+    return userIds.map(id => {
+      const user = users[id];
+      if (!user) return null;
+      return {
+        user_id: id,
+        img: user.img,
+        user_name: user.user_name,
+      };
+    });
+  }
+);
+
+export const makeSelectUsersByIds = (userIds) =>
+  createSelector(
+    (state) => state.dataReducer.users,
+    (users) => userIds.map(id => users[id])
+  );
+
+export const makeSelectUserById = (userId) =>
+  createSelector(
+    (state) => state.dataReducer.users[userId],
+    (user) => user
+  );
+
+//convo 
+
+export const selectSessionUserId = (state) => state.dataReducer.session_details.current_user_details.id;
+
+
+export const selectConvoUserIds = (convo_id, type) => (state) => {
+    if (type==="group"){
+        return state.dataReducer.conversations_groups[convo_id].user_ids;
+    }else if(type === "duo"){
+        return state.dataReducer.conversations_duo[convo_id].user_ids;
+    }  
+}
+
+export const selectConvoName = (convo_id) => (state) => state.dataReducer.conversations_groups[convo_id]?.name;
+
+
 
 
 

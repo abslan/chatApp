@@ -1,15 +1,15 @@
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, memo } from 'react';
 import {MessageItem} from './MessageItem';
 import styles from './Chatbox.module.css';
 
-export default function MessageList({ messages}) {
+export const MessageList = memo(({ messages}) => {
   const containerRef = useRef(null);
   
   useEffect(() => {
     containerRef.current.scrollTop = containerRef.current.scrollHeight;
   }, [messages]);
 
-  const visibleMessages = useMemo(()=> messages.map((msg, idx) => (
+  const visibleMessages = useMemo(()=> messages.map((msg) => (
         <MessageItem
           key={msg.msg_id}
           message={msg}
@@ -21,4 +21,4 @@ export default function MessageList({ messages}) {
       {visibleMessages}
     </div>
   );
-}
+});

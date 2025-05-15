@@ -1,10 +1,11 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { dataSelector, dataActions } from '../../redux/reducers/dataReducer';
 import ChatHeader from './ChatHeader';
-import MessageList from './MessageList';
 import TypingIndicator from './TypingIndicator';
 import ChatInput from './ChatInput';
 import styles from './Chatbox.module.css';
+
+import { MessageList } from './MessageList';
 
 export default function Chatbox() {
     const dispatch = useDispatch();
@@ -36,9 +37,7 @@ export default function Chatbox() {
     return (
         <div className={`${styles.chatbox} ${theme === 'dark' ? styles.dark_theme : ''}`}>  
         <ChatHeader
-            convo={convoData}
-            users={users}
-            currentUserId={current_user_details.id}
+            convo_id={current_convo_details.id}
             type={convoType}
         />
         <MessageList

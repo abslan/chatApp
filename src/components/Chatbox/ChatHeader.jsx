@@ -1,20 +1,56 @@
-import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { MdOutlineExpandMore, MdAddCircleOutline } from 'react-icons/md';
 import { HiOutlineInformationCircle } from 'react-icons/hi';
 import styles from './Chatbox.module.css';
 
 
-import MemberDropdown from './MemberDropdown';
-import { dataActions, truncate } from '../../redux/reducers/dataReducer';
+import { MemberDropdown } from './MemberDropdown';
+import { truncate, selectConvoUserIds, selectSessionUserId, selectConvoName, selectUserFriends, makeSelectUserById, makeSelectUsersByIds } from '../../redux/reducers/dataReducer';
+import { useMemo, useCallback } from 'react';
 
-export default function ChatHeader({ convo, users, currentUserId, type }) {
+export default function ChatHeader({ convo_id, type }) {
 
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
+
+  // const convo_id = null;
+
+  //selectors
+  const currentUserId = useSelector(selectSessionUserId);
+  const currentUserFriends = useSelector(selectUserFriends(currentUserId));
+
+  const convoUserIds = useSelector(selectConvoUserIds(convo_id, type));
+  // const otherUserIds = convoUserIds.filter(id => id !== currentUserId);
+  const otherUserIds = useMemo(() => convoUserIds.filter(id => id !== currentUserId), [convoUserIds, currentUserId]);
+  const currentUserFriendsinConvo = useMemo(() => currentUserFriends.filter(id => !convoUserIds.includes(id)), [currentUserFriends, convoUserIds]);
+  
+  // const otherUsers = useSelector(state => {
+  //   if (type === 'group') {
+  //     return selectUsersByIds(otherUserIds)(state);
+  //   } else {
+  //     const otherUserId = otherUserIds[0]; // 1:1 chat
+  //     return selectUserById(otherUserId)(state);
+  //   }
+  // });
+  const selectOtherUsers = useMemo(() => {
+    if (type === 'group') {
+      return makeSelectUsersByIds(otherUserIds);
+    } else {
+      return makeSelectUserById(otherUserIds[0]); // 1:1 chat
+    }
+  }, [type, otherUserIds]);
+  const otherUsers = useSelector(selectOtherUsers);
+
+  const convoName = useSelector(state => type === 'group' ? selectConvoName(convo_id)(state) : null);
 
 
-  const otherUsers = type === 'group'
-    ? convo.user_ids.filter(id => id !== currentUserId).map(id => users[id])
-    : users[convo.user_ids.find(id => id !== currentUserId)];
+  const renderTriggerInfoButton = useCallback(
+    () => <HiOutlineInformationCircle size={20} className={styles.info_btn} />, []
+  )
+
+  const renderTriggerAddButton = useCallback(
+    () => <MdAddCircleOutline size={20} className={styles.add_users} />, []
+  );
+
     
 
   return (
@@ -39,16 +75,18 @@ export default function ChatHeader({ convo, users, currentUserId, type }) {
       <div className={styles.group_info}>
         <span className={styles.user_names}>
           {type === 'group'
-            ? (convo.name || truncate(otherUsers.map(u => u.user_name).join(", "),30) )
+            ? (convoName || truncate(otherUsers.map(u => u.user_name).join(", "),30) )
             : truncate(otherUsers.user_name, 25)}
         </span>
         
         {/* Info Dropdown for Group Members */}
         {type === 'group' && (
           <MemberDropdown
-            users={otherUsers}
-            onRemove={user => dispatch(dataActions.removeMember({ user_id: user.id, convo_id: convo.id }))}
-            renderTrigger={() => <HiOutlineInformationCircle size={20} className={styles.info_btn} />}
+            userIds={otherUserIds}
+            // onRemove={user_id => dispatch(dataActions.removeMember({ user_id, convo_id }))}
+            renderTrigger={renderTriggerInfoButton}
+            convo_id = {convo_id}
+            onRemove={true}
           />
         )}
 
@@ -59,11 +97,14 @@ export default function ChatHeader({ convo, users, currentUserId, type }) {
       {/* Add Member Dropdown for Group */}
       {type === 'group' && (
         <MemberDropdown
-          users={users[currentUserId].friends
-            .filter(id => !convo.user_ids.includes(id))
-            .map(id => users[id])}
-          onAdd={user => dispatch(dataActions.addMember({ user_id: user.id, convo_id: convo.id }))}
-          renderTrigger={() => <MdAddCircleOutline size={20} className={styles.add_users} />}
+          userIds={currentUserFriendsinConvo}
+          // {currentUserFriends
+          //   .filter(id => !convoUserIds.includes(id))
+          // }
+          // onAdd={user_id => dispatch(dataActions.addMember({ user_id , convo_id}))}
+          renderTrigger={renderTriggerAddButton}
+          convo_id = {convo_id}
+          onAdd={true}
         />
       )}
     </div>

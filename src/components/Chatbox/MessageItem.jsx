@@ -1,14 +1,14 @@
 import React from 'react';
 import styles from './Chatbox.module.css';
 import RenderData from './RenderData';
-import { formatTimestamp, selectUserById, currentUserSelector } from '../../redux/reducers/dataReducer';
+import { formatTimestamp, selectUserById, selectSessionUserId } from '../../redux/reducers/dataReducer';
 
 import {useSelector} from 'react-redux';
 
 export const MessageItem = React.memo(({ message }) => {
 
     const user = useSelector(selectUserById(message.user_id));
-    const currentUserId = useSelector(currentUserSelector);
+    const currentUserId = useSelector(selectSessionUserId);
 
     const isOwn = message.user_id === currentUserId;
 
