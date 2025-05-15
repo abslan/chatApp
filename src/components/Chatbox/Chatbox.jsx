@@ -1,11 +1,13 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { dataSelector, dataActions } from '../../redux/reducers/dataReducer';
-import ChatHeader from './ChatHeader';
 import TypingIndicator from './TypingIndicator';
 import ChatInput from './ChatInput';
 import styles from './Chatbox.module.css';
 
+
+
 import { MessageList } from './MessageList';
+import {ChatHeader} from './ChatHeader';
 
 export default function Chatbox() {
     const dispatch = useDispatch();

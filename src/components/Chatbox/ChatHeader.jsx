@@ -6,9 +6,9 @@ import styles from './Chatbox.module.css';
 
 import { MemberDropdown } from './MemberDropdown';
 import { truncate, selectConvoUserIds, selectSessionUserId, selectConvoName, selectUserFriends, makeSelectUserById, makeSelectUsersByIds } from '../../redux/reducers/dataReducer';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, memo } from 'react';
 
-export default function ChatHeader({ convo_id, type }) {
+export const ChatHeader = memo(({ convo_id, type }) => {
 
   // const dispatch = useDispatch();
 
@@ -109,4 +109,4 @@ export default function ChatHeader({ convo_id, type }) {
       )}
     </div>
   );
-}
+})
