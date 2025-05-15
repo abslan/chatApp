@@ -283,3 +283,10 @@ export const usersSelector = (state) => state.dataReducer.users;
 export const convoGroupSelector = (state) => state.dataReducer.conversations_groups;
 export const convoDuoSelector = (state) => state.dataReducer.conversations_duo;
 export const sessionDetailsSelector = (state) => state.dataReducer.session_details;
+
+
+export const selectUserById = (userId) => (state) => state.dataReducer.users[userId];
+export const currentUserSelector = (state) => state.dataReducer.session_details.current_user_details.id;
+
+
+

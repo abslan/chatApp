@@ -1,8 +1,17 @@
+import React from 'react';
 import styles from './Chatbox.module.css';
 import RenderData from './RenderData';
-import { formatTimestamp } from '../../redux/reducers/dataReducer';
+import { formatTimestamp, selectUserById, currentUserSelector } from '../../redux/reducers/dataReducer';
 
-export default function MessageItem({ message, isOwn, user, currentUserId }) {
+import {useSelector} from 'react-redux';
+
+export const MessageItem = React.memo(({ message }) => {
+
+    const user = useSelector(selectUserById(message.user_id));
+    const currentUserId = useSelector(currentUserSelector);
+
+    const isOwn = message.user_id === currentUserId;
+
 
     if(message.data.type === "group"){
         return (
@@ -27,4 +36,4 @@ export default function MessageItem({ message, isOwn, user, currentUserId }) {
         </div>
     </div>
     );
-}
+});

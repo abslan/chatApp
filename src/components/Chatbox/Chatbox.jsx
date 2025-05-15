@@ -43,8 +43,6 @@ export default function Chatbox() {
         />
         <MessageList
             messages={messages}
-            users={users}
-            currentUserId={current_user_details.id}
         />
         {typingList.length > 0 && (
             <TypingIndicator
