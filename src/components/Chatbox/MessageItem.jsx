@@ -1,9 +1,10 @@
 import React from 'react';
 import styles from './Chatbox.module.css';
-import RenderData from './RenderData';
 import { formatTimestamp, selectUserById, selectSessionUserId } from '../../redux/reducers/dataReducer';
 
 import {useSelector} from 'react-redux';
+
+import { RenderData } from './RenderData';
 
 export const MessageItem = React.memo(({ message }) => {
 

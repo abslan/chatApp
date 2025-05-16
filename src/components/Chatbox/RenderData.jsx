@@ -1,6 +1,7 @@
 import styles from './Chatbox.module.css';
+import { memo } from 'react';
 
-export default function RenderData({ item }) {
+export const RenderData = memo(({ item })  =>{
   switch (item.type) {
     case 'image':
       return <img className={styles.data_img} src={item.value} alt="attachment" />;
@@ -19,4 +20,4 @@ export default function RenderData({ item }) {
     default:
       return null;
   }
-}
+});

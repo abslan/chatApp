@@ -201,6 +201,7 @@ export const dataSlice = createSlice({
             // state.conversations_groups
             const { status} = action.payload;
             const user_id = state.session_details.current_user_details.id;
+            const user_name = state.users[user_id].user_name;
             const convo_type = state.session_details["current_convo_details"]["type"];
             const convo_id  = state.session_details["current_convo_details"]["id"];
 
@@ -208,7 +209,7 @@ export const dataSlice = createSlice({
             if(convo_type === "group"){
                 const index = state.conversations_groups[convo_id].typing.map(item => item.user_id).indexOf(user_id);
                 if(index===-1){
-                    state.conversations_groups[convo_id].typing.push({user_id, status})
+                    state.conversations_groups[convo_id].typing.push({user_id, user_name, status})
                     return
                 }
                 if(status==="finished"){
@@ -220,7 +221,7 @@ export const dataSlice = createSlice({
             }else{
                 const index = state.conversations_duo[convo_id].typing.map(item => item.user_id).indexOf(user_id)
                 if(index===-1){
-                    state.conversations_duo[convo_id].typing.push({user_id, status})
+                    state.conversations_duo[convo_id].typing.push({user_id, user_name, status})
                     return
                 }
                 if(status==="finished"){
@@ -339,10 +340,33 @@ export const selectConvoUserIds = (convo_id, type) => (state) => {
         return state.dataReducer.conversations_duo[convo_id].user_ids;
     }  
 }
-
 export const selectConvoName = (convo_id) => (state) => state.dataReducer.conversations_groups[convo_id]?.name;
 
+export const selectConvoMessages =  (convo_id, type) => (state) => {
+    if (type==="group"){
+        return state.dataReducer.conversations_groups[convo_id].messages;
+    }else if(type === "duo"){
+        return state.dataReducer.conversations_duo[convo_id].messages;
+    }  
+}
 
+export const selectConvoTypingList =  (convo_id, type) => (state) => {
+    if (type==="group"){
+        return state.dataReducer.conversations_groups[convo_id].typing;
+    }else if(type === "duo"){
+        return state.dataReducer.conversations_duo[convo_id].typing;
+    }  
+}
+
+export const makeSelectConvoPreview = (convo_id, type) =>  createSelector(
+    [
+        selectConvoMessages(convo_id, type),
+        selectConvoTypingList(convo_id, type), 
+    ],
+    (messages, typing) => {
+        return {messages: messages, typing: typing}
+    }
+) 
 
 
 

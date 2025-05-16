@@ -1,24 +1,24 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { dataSelector, dataActions } from '../../redux/reducers/dataReducer';
-import TypingIndicator from './TypingIndicator';
-import ChatInput from './ChatInput';
 import styles from './Chatbox.module.css';
+import { useSelector, useDispatch } from 'react-redux';
+import { dataActions, makeSelectConvoPreview, sessionDetailsSelector } from '../../redux/reducers/dataReducer';
+import { useMemo } from 'react';
 
-
+import ChatInput from './ChatInput';
 
 import { MessageList } from './MessageList';
 import {ChatHeader} from './ChatHeader';
+import { TypingIndicator } from './TypingIndicator';
+
 
 export default function Chatbox() {
+    //chatapp todo useMemo for big calculations and createSelector for caching if possible, and derive only necessary data from state
     const dispatch = useDispatch();
-    const { conversations_duo, conversations_groups, users, session_details } = useSelector(dataSelector);
-    const { current_convo_details, current_user_details, theme } = session_details;
-    const { id: convoId, type: convoType } = current_convo_details;
 
-    // Determine current conversation data
-    const convoData = convoType === 'group'
-    ? conversations_groups[convoId]
-    : conversations_duo[convoId];
+    const { current_convo_details, theme } = useSelector(sessionDetailsSelector);
+    const { id: convoId, type: convoType } = current_convo_details;
+    
+    const selectConvoPreview  = useMemo(() => makeSelectConvoPreview(convoId, convoType), [convoId, convoType])
+    const convoData = useSelector(selectConvoPreview)
     const messages = convoData?.messages || [];
     const typingList = convoData?.typing || [];
 
@@ -45,13 +45,9 @@ export default function Chatbox() {
         <MessageList
             messages={messages}
         />
-        {typingList.length > 0 && (
-            <TypingIndicator
+        <TypingIndicator
             typingList={typingList}
-            users={users}
-            currentUserId={current_user_details.id}
-            />
-        )}
+        />
         <ChatInput
             onSend={handleSend}
             onFileChange={handleFileChange}
