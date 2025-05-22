@@ -204,6 +204,7 @@ export const dataSlice = createSlice({
             const user_name = state.users[user_id].user_name;
             const convo_type = state.session_details["current_convo_details"]["type"];
             const convo_id  = state.session_details["current_convo_details"]["id"];
+            
 
 
             if(convo_type === "group"){

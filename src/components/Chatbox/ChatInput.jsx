@@ -9,6 +9,11 @@ export default function ChatInput({ onSend, onFileChange, onTyping }) {
   const timeoutRef = useRef(null);
 
   const handleKeyDown = e => {
+
+     if (e.key === 'Enter') {
+      handleSend();
+      return
+    }
     // Notify parent that user started typing
     onTyping('typing');
     // Clear existing timeout
@@ -18,11 +23,6 @@ export default function ChatInput({ onSend, onFileChange, onTyping }) {
       onTyping('finished');
     }, 1000);
 
-    if (e.key === 'Enter') {
-      // Immediately send message on Enter
-      handleSend();
-      clearTimeout(timeoutRef.current);
-    }
   };
 
   const handleSend = () => {
@@ -30,9 +30,6 @@ export default function ChatInput({ onSend, onFileChange, onTyping }) {
     if (text) {
       onSend(text);
       inputRef.current.value = '';
-      // After sending, notify finished typing
-      onTyping('finished');
-      clearTimeout(timeoutRef.current);
     }
   };
 

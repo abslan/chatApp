@@ -5,6 +5,7 @@ import styles from './Chatbox.module.css';
 export const MessageList = memo(({ messages}) => {
   const containerRef = useRef(null);
   
+  //chatapp todo replace with useLayoutEffect and test
   useEffect(() => {
     containerRef.current.scrollTop = containerRef.current.scrollHeight;
   }, [messages]);
