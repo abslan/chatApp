@@ -34,6 +34,12 @@ export default function Chatbox() {
     };
     const handleFileChange = e => {
     // Implement file upload logic
+        const file = e.target.files[0];
+        if (file) {
+            const imageUrl = URL.createObjectURL(file); // creates blob URL
+            dispatch(dataActions.addMessage({ data: imageUrl, type: 'image' }))
+            e.target.value = null;
+        }
     };
 
     return (

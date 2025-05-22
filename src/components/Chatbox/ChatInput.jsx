@@ -4,6 +4,8 @@ import { FiSend } from 'react-icons/fi';
 import styles from './Chatbox.module.css';
 
 export default function ChatInput({ onSend, onFileChange, onTyping }) {
+  // const [preview, setPreview] = useState(null);
+
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const timeoutRef = useRef(null);

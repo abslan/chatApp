@@ -134,7 +134,7 @@ export const dataSlice = createSlice({
             // {   msg_id : "rihanna_taylorswift_1" ,data : { type: 'text', value: 'Hello' } ,
             //  timestamp : "00:01", user_id : "rihanna", delete_for: ["rihanna"]},
             const {type, data} = action.payload;
-            // console.log(data, type)
+            console.log(data, type)
 
             const user_id = state.session_details.current_user_details.id;
             const convo_type = state.session_details["current_convo_details"]["type"];
