@@ -11,7 +11,7 @@ import { dataSelector, dataActions } from "../../redux/reducers/dataReducer";
 
 import Header from "./Header";
 import DropdownUserCard from "./DropdownUserCard";
-import ConversationList from "./ConversationList";
+import {ConversationList} from "./ConversationList";
 
 
 export default function Conversations(){

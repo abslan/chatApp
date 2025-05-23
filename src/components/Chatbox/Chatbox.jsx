@@ -14,7 +14,9 @@ export default function Chatbox() {
     //chatapp todo useMemo for big calculations and createSelector for caching if possible, and derive only necessary data from state
     const dispatch = useDispatch();
 
-    const { current_convo_details, theme } = useSelector(sessionDetailsSelector);
+    const session_details  = useSelector(sessionDetailsSelector);
+    const { current_convo_details, theme } =   session_details// useSelector(sessionDetailsSelector);
+    console.log("chatbox session details", session_details )
     const { id: convoId, type: convoType } = current_convo_details;
     
     const selectConvoPreview  = useMemo(() => makeSelectConvoPreview(convoId, convoType), [convoId, convoType])
@@ -33,7 +35,7 @@ export default function Chatbox() {
         dispatch(dataActions.handleTyping({ status }));
     };
     const handleFileChange = e => {
-    // Implement file upload logic
+    // chat app todo fetch from firebase
         const file = e.target.files[0];
         if (file) {
             const imageUrl = URL.createObjectURL(file); // creates blob URL
@@ -41,6 +43,11 @@ export default function Chatbox() {
             e.target.value = null;
         }
     };
+
+
+    if(!current_convo_details.id){
+        return null
+    }
 
     return (
         <div className={`${styles.chatbox} ${theme === 'dark' ? styles.dark_theme : ''}`}>  

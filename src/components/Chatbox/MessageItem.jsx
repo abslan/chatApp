@@ -6,6 +6,8 @@ import {useSelector} from 'react-redux';
 
 import { RenderData } from './RenderData';
 
+import { formatImageSource } from '../../redux/reducers/dataReducer';
+
 export const MessageItem = React.memo(({ message }) => {
 
     const user = useSelector(selectUserById(message.user_id));
@@ -29,7 +31,9 @@ export const MessageItem = React.memo(({ message }) => {
             <RenderData item={message.data}/>
         </div>}
         <div className={styles.user_details} style={{ flexDirection: isOwn ? 'row-reverse' : 'row' }}>
-        <img className={styles.user_img} src={user.img} alt="" />
+        <img className={styles.user_img} 
+            src= {formatImageSource(user.img)}   //{`data:image/jpeg;base64,${user.img}`}//{user.img} 
+            alt="" />
         <div>
             <span className={styles.user_name}>{user.user_name}</span>
             <span className={styles.timestamp}>{formatTimestamp(message.timestamp)}</span>

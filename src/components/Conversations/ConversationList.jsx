@@ -1,7 +1,11 @@
-import ConversationItem from './ConversationItem';
+import {ConversationItem} from './ConversationItem';
 import styles from './Conversations.module.css';
+import { memo } from 'react';
 
-export default function ConversationList({  current_user_convo_list, convo_list, users, currentUserId, onNewDuo, onSwipeStart, onSwipeEnd, type }) {
+export const ConversationList = memo(({  current_user_convo_list, convo_list, users,
+   currentUserId, onNewDuo, onSwipeStart, onSwipeEnd, type }) => {
+
+  console.log("convo list rendered")
   if (type) {
     return (
       <div className={
@@ -27,4 +31,4 @@ export default function ConversationList({  current_user_convo_list, convo_list,
     );
   }
   return null;
-}
+});

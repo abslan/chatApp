@@ -1,14 +1,20 @@
 import styles from "./Nav.module.css";
 import {FiLogOut} from "react-icons/fi";
-import { Outlet } from "react-router-dom";
+import { Outlet , useNavigate} from "react-router-dom";
 import {MdLightMode, MdDarkMode} from "react-icons/md"
 
-import { sessionDetailsSelector, dataActions } from "../../redux/reducers/dataReducer";
+import { sessionDetailsSelector, dataActions, handleLogout } from "../../redux/reducers/dataReducer";
 import {useDispatch, useSelector} from "react-redux";
 
 export default function Nav(){
     const {theme} = useSelector(sessionDetailsSelector);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const onLogout = async () => {
+        dispatch(handleLogout());
+        navigate('/chatApp/');
+    };
 
     return (
         <div>
@@ -23,7 +29,7 @@ export default function Nav(){
                     </div>
                 </div>
                 <input className={styles.searchbox}></input>
-                <FiLogOut size={20}></FiLogOut>
+                <FiLogOut size={20} onClick={onLogout}></FiLogOut>
             </div>
             <Outlet/>
         </div>

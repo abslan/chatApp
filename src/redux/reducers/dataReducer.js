@@ -3,6 +3,19 @@ import { data } from "../../data";
 
 import { createSelector } from "@reduxjs/toolkit";
 
+
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import { getDoc, doc } from "firebase/firestore";
+import { db } from "../../firebase_files/config";
+
+import { signOut } from "firebase/auth";
+import { auth } from "../../firebase_files/config";
+
+import { ref, set, serverTimestamp } from 'firebase/database';
+import { realtime_db } from "../../firebase_files/config";
+
+
+
 // const INITIAL_STATE = data;
 export const dataSlice = createSlice({
     name : "data",
@@ -134,7 +147,7 @@ export const dataSlice = createSlice({
             // {   msg_id : "rihanna_taylorswift_1" ,data : { type: 'text', value: 'Hello' } ,
             //  timestamp : "00:01", user_id : "rihanna", delete_for: ["rihanna"]},
             const {type, data} = action.payload;
-            console.log(data, type)
+            // console.log(data, type)
 
             const user_id = state.session_details.current_user_details.id;
             const convo_type = state.session_details["current_convo_details"]["type"];
@@ -169,7 +182,9 @@ export const dataSlice = createSlice({
         },
 
         userLogout: (state, action) => {
-
+            state.session_details.current_user_details = {}
+            state.session_details.current_convo_details = {}
+            state.session_details.loading = true
         },
         userLogin: (state, action) => {
 
@@ -244,8 +259,26 @@ export const dataSlice = createSlice({
                 type: type,
                 id : id
             }
-        }
+        },
           
+    },
+
+    extraReducers: (builder) => {
+    builder
+        .addCase(fetchUserData.pending, (state) => {
+        state.session_details.loading = true;
+        })
+        .addCase(fetchUserData.fulfilled, (state, action) => {
+        state.session_details.loading = false;
+
+        //setting data here itself
+        state.session_details.current_user_details = action.payload;
+        state.users[action.payload.id] = action.payload;
+        })
+        .addCase(fetchUserData.rejected, (state, action) => {
+        state.session_details.loading = false;
+        state.session_details.error = action.payload;
+        });
     },
 })
 
@@ -333,6 +366,7 @@ export const makeSelectUserById = (userId) =>
 
 export const selectSessionUserId = (state) => state.dataReducer.session_details.current_user_details.id;
 
+export const selectSessionLoadingState = (state) => state.dataReducer.session_details.loading
 
 export const selectConvoUserIds = (convo_id, type) => (state) => {
     if (type==="group"){
@@ -370,4 +404,66 @@ export const makeSelectConvoPreview = (convo_id, type) =>  createSelector(
 ) 
 
 
+
+// SETTERS 
+
+
+//utils
+export const formatEmailToId = (email) => {
+    return email.replace('@gmail.com', '');
+};
+
+
+export const formatImageSource = (src) => {
+    const isBase64 = src.startsWith("data:image/") || /^[A-Za-z0-9+/=]+$/.test(src);
+    const imageSrc = isBase64
+    ? src.startsWith("data:image/") 
+        ? src 
+        : `data:image/jpeg;base64,${src}`
+    : src;
+    return imageSrc;
+}
+
+//thunks
+
+export const fetchUserData = createAsyncThunk(
+    "data/fetchUserData",
+    async (uid, thunkAPI) => {
+    try {
+        const userDoc = await getDoc(doc(db, "users", uid));
+        // console.log("fetchuserdata", "fetching user")
+        if (userDoc.exists()) return userDoc.data();
+        // console.log("fetchuserdata", "user not found")
+        return thunkAPI.rejectWithValue("User not found");
+    } catch (err) {
+        // console.log("fetchuserdata", err)
+        return thunkAPI.rejectWithValue(err.message);
+    }
+    }
+);
+
+
+export const handleLogout = createAsyncThunk(
+  'data/handleLogout',
+  async (_, thunkAPI) => {
+    try {
+        //real time updates of online status
+        const user = auth.currentUser;
+        if (user) {
+        const id = formatEmailToId(user.email)
+        const userStatusRef = ref(realtime_db, `/status/${id}`);
+
+        await set(userStatusRef, {
+            isOnline: false,
+            lastSeen: serverTimestamp(),
+        });
+        }
+
+        await signOut(auth);
+        thunkAPI.dispatch(dataActions.userLogout()); // optional: clear Redux state
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
 

@@ -5,9 +5,11 @@ import { Provider } from "react-redux";
 
 import './App.css';
 import Page404 from "./pages/misc/Page404";
-import Nav from "./pages/app/Nav";
-import UserChats from "./pages/user/UserChats";
+import Nav from "./components/Navbar/Nav";
+import UserChats from "./components/UserChats/UserChats";
 import ErrorBoundary from "./components/Common/ErrorBoundary";
+
+import LoginSignup from "./pages/app/LoginSignup";
 
 // const basename = process.env.NODE_ENV === 'production'
 //   ? process.env.PUBLIC_URL
@@ -16,7 +18,7 @@ import ErrorBoundary from "./components/Common/ErrorBoundary";
 function App() {
   const browserRouter = createBrowserRouter([
     {
-      path: "/chatApp",
+      path: "/chatApp/home",
       element: <ErrorBoundary><Nav /></ErrorBoundary>,
       errorElement: <Page404 />,
       children: [{ 
@@ -29,7 +31,11 @@ function App() {
     window.location.replace("/chatApp");
     return null;
     }
-  },
+  },{
+      path: "/chatApp/",
+      element: <ErrorBoundary><LoginSignup/></ErrorBoundary>,
+      errorElement: <Page404 />
+    }, 
   ]);
 
   return (

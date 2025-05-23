@@ -2,12 +2,22 @@ import {MdOutlineUnfoldMore} from "react-icons/md";
 
 import styles from './Conversations.module.css';
 import LastMessage from './LastMessage';
-import { formatTimestamp, truncate } from '../../redux/reducers/dataReducer';
+import { formatTimestamp, truncate, formatImageSource } from '../../redux/reducers/dataReducer';
 
+import { useGroupOnlineStatus } from "../../firebase_files/realtimeUtils";
+import { memo, useMemo } from "react";
 
 //  chatapp todo use selectors for getting user details
-export default function ConversationItem({ convo, otherUsers, type, onSwipeStart, onSwipeEnd }) {
+export const ConversationItem = memo(({ convo, otherUsers, type, onSwipeStart, onSwipeEnd }) =>  {
+  // other users is userpreveiew img, id, name
+  console.log("other users", otherUsers)
+  const otherUsersIds = useMemo(() => otherUsers.map(u => u.id), [otherUsers])
+  const { anyOnline } = useGroupOnlineStatus(otherUsersIds);
+  // const anyOnline = null;
   const last = convo.messages.length > 0 ? convo.messages[convo.messages.length - 1] : null;
+  // console.log("anyonline", anyOnline)
+  
+  
   return (
     <div
       className={
@@ -29,7 +39,7 @@ export default function ConversationItem({ convo, otherUsers, type, onSwipeStart
             className={
               type === 'duo' ? styles.duo_user_image : styles.groups_user_img
             }
-            src={u.img}
+            src={formatImageSource(u.img)}
             alt=""
           />
         ))}
@@ -45,11 +55,12 @@ export default function ConversationItem({ convo, otherUsers, type, onSwipeStart
       </div>
       <div className={styles.timestamp_container}>
         <div
-          style={{ backgroundColor: otherUsers.some(u => u.is_online) ? 'green' : 'grey' }}
+          style={{ backgroundColor: anyOnline ? //otherUsers.some(u => u.is_online) ? 
+            'green' : 'grey' }}
           className={styles.online_status}
         />
         <p className={styles.timestamp}>{last && formatTimestamp(last.timestamp)}</p>
       </div>
     </div>
   );
-}
+});

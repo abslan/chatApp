@@ -93,7 +93,8 @@ export const data = {
             id :  "convo_gid1"
         },
         // theme: "light",
-        theme: "dark"
+        theme: "dark",
+        loading : true,
    }
 }
 

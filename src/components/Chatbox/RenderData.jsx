@@ -1,6 +1,6 @@
 import styles from './Chatbox.module.css';
 import { memo } from 'react';
-import { truncate } from '../../redux/reducers/dataReducer';
+import { truncate, formatImageSource } from '../../redux/reducers/dataReducer';
 
 export const RenderData = memo(({ item, type })  =>{
   switch (item.type) {
@@ -8,7 +8,9 @@ export const RenderData = memo(({ item, type })  =>{
       if(type === "last"){
         return <p></p>
       }
-      return <img className={styles.data_img} src={item.value} alt="attachment" />;
+      return <img className={styles.data_img} 
+      src={formatImageSource(item.value)} //{`data:image/jpeg;base64,${item.value}`}
+      alt="attachment" />;
     case 'link':
       if (type === 'last'){
         return (

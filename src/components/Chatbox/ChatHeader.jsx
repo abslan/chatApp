@@ -5,7 +5,8 @@ import styles from './Chatbox.module.css';
 
 
 import { MemberDropdown } from './MemberDropdown';
-import { truncate, selectConvoUserIds, selectSessionUserId, selectConvoName, selectUserFriends, makeSelectUserById, makeSelectUsersByIds } from '../../redux/reducers/dataReducer';
+import { truncate, selectConvoUserIds, selectSessionUserId, selectConvoName,
+   selectUserFriends, makeSelectUserById, makeSelectUsersByIds, formatImageSource } from '../../redux/reducers/dataReducer';
 import { useMemo, useCallback, memo } from 'react';
 
 export const ChatHeader = memo(({ convo_id, type }) => {
@@ -20,6 +21,7 @@ export const ChatHeader = memo(({ convo_id, type }) => {
 
   const convoUserIds = useSelector(selectConvoUserIds(convo_id, type));
   // const otherUserIds = convoUserIds.filter(id => id !== currentUserId);
+  console.log("chatheader:", convoUserIds)
   const otherUserIds = useMemo(() => convoUserIds.filter(id => id !== currentUserId), [convoUserIds, currentUserId]);
   const currentUserFriendsinConvo = useMemo(() => currentUserFriends.filter(id => !convoUserIds.includes(id)), [currentUserFriends, convoUserIds]);
   
@@ -64,7 +66,7 @@ export const ChatHeader = memo(({ convo_id, type }) => {
           : (
               <img
                 className={styles.groups_user_img}
-                src={otherUsers.img}
+                src={formatImageSource(otherUsers.img)}
                 alt=""
               />
             )}
