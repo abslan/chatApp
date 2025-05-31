@@ -32,7 +32,8 @@ export const dataSlice = createSlice({
                     user_ids : [current_user_id, friend_id],
                     visible_for : [current_user_id, friend_id],
                     typing: [],
-                    messages : [ ]
+                    messages : [ ],
+                    last_message : {},
                 }
 
                 state.users[friend_id].conversations_duo.push(duo_id);
@@ -185,6 +186,7 @@ export const dataSlice = createSlice({
             state.session_details.current_user_details = {}
             state.session_details.current_convo_details = {}
             state.session_details.loading = true
+            state.session_details.conversationsMetaLoading = true
         },
         userLogin: (state, action) => {
 
@@ -265,6 +267,7 @@ export const dataSlice = createSlice({
 
     extraReducers: (builder) => {
     builder
+        //fetchUserData handlers
         .addCase(fetchUserData.pending, (state) => {
         state.session_details.loading = true;
         })
@@ -278,6 +281,29 @@ export const dataSlice = createSlice({
         .addCase(fetchUserData.rejected, (state, action) => {
         state.session_details.loading = false;
         state.session_details.error = action.payload;
+        })
+
+        // fetchConversationsMetaByType handlers
+        .addCase(fetchConversationsMetaByType.pending, (state) => {
+        state.session_details.conversationsMetaLoading = true;
+        })
+        .addCase(fetchConversationsMetaByType.fulfilled, (state, action) => {
+        state.session_details.conversationsMetaLoading = false;
+        // Merge the fetched metadata into store
+        // Object.entries(action.payload).forEach(([id, convoData]) => {
+        //     state.conversations[id] = convoData;
+        // });
+        const {results, type} = action.payload;
+        if (type === "group"){
+            state.conversations_groups = results
+        }else if (type === "duo"){
+            state.conversations_duo = results
+        }
+
+        })
+        .addCase(fetchConversationsMetaByType.rejected, (state, action) => {
+        state.conversationsMetaLoading = false;
+        state.conversationsMetaError = action.payload;
         });
     },
 })
@@ -393,6 +419,28 @@ export const selectConvoTypingList =  (convo_id, type) => (state) => {
     }  
 }
 
+export const makeSelectConvosMetaDataPreview = (convo_ids, type) => {
+  return createSelector(
+    (state) => {
+      const source = type === "group" ? state.dataReducer.conversations_groups : state.dataReducer.conversations_duo;
+    //   console.log("makeselectconvosmetadatapreview", type, source)
+      return convo_ids.map((convo_id) => {
+        const convo = source[convo_id];
+        if (!convo) return null;
+
+        const { id, user_ids, admins, name, visible_for, last_message } = convo;
+
+        return type === "group"
+          ? { id, user_ids, admins, name, visible_for, last_message }
+          : { id, user_ids, visible_for, last_message };
+      }).filter(Boolean); // remove nulls if any convo_id is invalid
+    },
+    (convosMeta) => convosMeta
+  );
+};
+
+
+
 export const makeSelectConvoPreview = (convo_id, type) =>  createSelector(
     [
         selectConvoMessages(convo_id, type),
@@ -402,6 +450,9 @@ export const makeSelectConvoPreview = (convo_id, type) =>  createSelector(
         return {messages: messages, typing: typing}
     }
 ) 
+
+
+
 
 
 
@@ -460,10 +511,36 @@ export const handleLogout = createAsyncThunk(
         }
 
         await signOut(auth);
-        thunkAPI.dispatch(dataActions.userLogout()); // optional: clear Redux state
+        thunkAPI.dispatch(dataActions.userLogout()); 
     } catch (error) {
         return thunkAPI.rejectWithValue(error.message);
     }
   }
 );
 
+
+export const fetchConversationsMetaByType = createAsyncThunk(
+  "data/fetchMetaByType",
+  async ({ ids, type }, thunkAPI) => {
+    try {
+      const results = {};
+
+      const collectionName =
+        type === "group" ? "conversations_groups" : "conversations_duo";
+
+      await Promise.all(
+        ids.map(async (id) => {
+          const docRef = doc(db, collectionName, id);
+          const snap = await getDoc(docRef);
+          if (snap.exists()) {
+            results[id] = snap.data() //{ ...snap.data(), id, type };
+          }
+        })
+      );
+
+      return {results, type};
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message || "Failed to fetch metadata");
+    }
+  }
+);

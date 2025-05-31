@@ -8,8 +8,8 @@ import { formatEmailToId } from "../../redux/reducers/dataReducer";
 export default function LoginSignup(){
     const navigate = useNavigate();
  
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('rihanna@gmail.com')
+    const [password, setPassword] = useState('rihanna');
     const [isSignupPage, setIsSignupPage] = useState(false);
     const emailInputRef = useRef();
     const passwordInputRef = useRef();

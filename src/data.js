@@ -68,7 +68,8 @@ export const data = {
                 {msg_id : "convo_gid1_7", data : { type: 'text', value: 'Hello, this is a text message.' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "rihanna", delete_for: []},
                 {msg_id : "convo_gid1_8", data : { type: 'link', value: 'https://www.example.com', label: 'Visit Example' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "beyonce", delete_for: []},
                 {msg_id : "convo_gid1_9", data : { type: 'image', value: url+"/images/cat.jpeg" } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "taylorswift", delete_for: []},
-            ]
+            ],
+            last_message: {msg_id : "convo_gid1_9", data : { type: 'image', value: url+"/images/cat.jpeg" } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "taylorswift", delete_for: []},
         },
     },
     conversations_duo : {
@@ -82,7 +83,9 @@ export const data = {
                {   msg_id : "rihanna_taylorswift_2"  ,data : { type: 'link', value: 'https://www.example.com', label: 'Visit Example' } , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "taylorswift", delete_for: []},
                {   msg_id : "rihanna_taylorswift_3" , data : { type: 'image', value: url+"/images/cat.jpeg" }
                 , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "taylorswift", delete_for: []},
-           ]
+           ], 
+           last_message:  {   msg_id : "rihanna_taylorswift_3" , data : { type: 'image', value: url+"/images/cat.jpeg" }
+                , timestamp : "Mon Aug 12 2023 07:32:16 GMT+0530 (India Standard Time)", user_id : "taylorswift", delete_for: []},
        },
    },
 
@@ -95,6 +98,8 @@ export const data = {
         // theme: "light",
         theme: "dark",
         loading : true,
+        conversationsMetaLoading : true,
+        messagesLoading : true
    }
 }
 

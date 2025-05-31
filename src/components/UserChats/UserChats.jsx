@@ -48,7 +48,7 @@ export default function UserChats(){
     return () => unsubscribe();
     }, [dispatch]);
 
-    console.log("userchats loading: ", loading)
+    // console.log("userchats loading: ", loading)
     if (loading) return <div>Loading...</div>;
 
     return (
