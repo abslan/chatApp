@@ -9,6 +9,10 @@ import { MessageList } from './MessageList';
 import {ChatHeader} from './ChatHeader';
 import { TypingIndicator } from './TypingIndicator';
 
+import { useEffect } from 'react';
+import { fetchConvoMeta, fetchConvoMessages } from '../../redux/reducers/dataReducer';
+import { useConvoListeners } from '../../firebase_files/listeners';
+
 
 export default function Chatbox() {
     //chatapp todo useMemo for big calculations and createSelector for caching if possible, and derive only necessary data from state
@@ -19,10 +23,25 @@ export default function Chatbox() {
     console.log("chatbox session details", session_details )
     const { id: convoId, type: convoType } = current_convo_details;
     
+    // chatapp todo, here we need to fetch meta data, from store, but we need to dispatch thunk API first
+    //and also fetch messages first, thunkAPI disptach at start  and store in redux
+    // next add real time listeners to messages and convo id meta data
     const selectConvoPreview  = useMemo(() => makeSelectConvoPreview(convoId, convoType), [convoId, convoType])
     const convoData = useSelector(selectConvoPreview)
     const messages = convoData?.messages || [];
     const typingList = convoData?.typing || [];
+
+    console.log("chatbox messages details", messages )
+
+    //fetching from store initial fetch and listening
+    useEffect(() => {
+        if (convoId && convoType) {
+            dispatch(fetchConvoMeta({ convoId, convoType }));
+            dispatch(fetchConvoMessages({ convoId, convoType }));
+        }
+    }, [convoId, convoType, dispatch]);
+
+    useConvoListeners(convoId, convoType);
 
   // Handlers
     const handleSend = text => dispatch(dataActions.addMessage({ data: text, type: 'text' }));

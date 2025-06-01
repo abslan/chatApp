@@ -3,6 +3,32 @@ const url = process.env.PUBLIC_URL
 
 export const data = {
     users : {
+    },
+    conversations_groups : {
+    },
+    conversations_duo : {
+   },
+
+   session_details: {
+        current_user_details : {},
+        current_convo_details : { },
+        theme: "dark",
+        loading : true,
+        conversationsMetaLoading : 0,
+        messagesLoading : true,
+        usersPreviewsLoading: true,
+        error : null
+   },
+
+
+   usersPreviews :[],
+}
+
+
+
+
+export const data2 = {
+    users : {
             "taylorswift" : {
                 id : "taylorswift",
                 img : url+"/images/artist1.jpeg",
@@ -98,9 +124,14 @@ export const data = {
         // theme: "light",
         theme: "dark",
         loading : true,
-        conversationsMetaLoading : true,
-        messagesLoading : true
-   }
+        conversationsMetaLoading : 0,
+        messagesLoading : true,
+        usersPreviewsLoading: true,
+        error : null
+   },
+
+
+   usersPreviews :[],
 }
 
 

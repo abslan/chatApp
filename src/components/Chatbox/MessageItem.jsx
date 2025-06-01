@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Chatbox.module.css';
-import { formatTimestamp, selectUserById, selectSessionUserId } from '../../redux/reducers/dataReducer';
+import { formatTimestamp, selectSessionUserId } from '../../redux/reducers/dataReducer';
 
 import {useSelector} from 'react-redux';
 
@@ -10,8 +10,16 @@ import { formatImageSource } from '../../redux/reducers/dataReducer';
 
 export const MessageItem = React.memo(({ message }) => {
 
-    const user = useSelector(selectUserById(message.user_id));
+    // const user = useSelector(selectUserById(message.user_id));
     const currentUserId = useSelector(selectSessionUserId);
+
+    const user = useSelector((state) => {
+        if(message.user_id !== currentUserId) {
+            return state.dataReducer.usersPreviews[message.user_id]
+        }else {
+            return state.dataReducer.users[currentUserId]
+        }}
+);
 
     const isOwn = message.user_id === currentUserId;
 
@@ -21,6 +29,15 @@ export const MessageItem = React.memo(({ message }) => {
             <RenderData item={message.data}/>
         )
     }
+
+    console.log("message item",  user)
+
+    if(!user){
+        return <div>loading...</div>
+    }
+
+    
+
 
     return (
     <div className={styles.message} 

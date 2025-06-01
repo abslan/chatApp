@@ -5,7 +5,7 @@ import { createSelector } from "@reduxjs/toolkit";
 
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, getDocs ,  collection, query, where, orderBy } from "firebase/firestore";
 import { db } from "../../firebase_files/config";
 
 import { signOut } from "firebase/auth";
@@ -13,7 +13,6 @@ import { auth } from "../../firebase_files/config";
 
 import { ref, set, serverTimestamp } from 'firebase/database';
 import { realtime_db } from "../../firebase_files/config";
-
 
 
 // const INITIAL_STATE = data;
@@ -25,7 +24,7 @@ export const dataSlice = createSlice({
             const current_user_id = state.session_details.current_user_details.id;
             const {friend_id} = action.payload;
             const duo_id = getDuoId(current_user_id, friend_id);
-            
+            // console.log("open Duo action payload", action.payload, current_user_id, JSON.parse(JSON.stringify(state)), state.users)
             if(!Object.keys(state.conversations_duo).includes(duo_id)){
                 state.conversations_duo[duo_id] = {
                     id: duo_id,
@@ -36,8 +35,50 @@ export const dataSlice = createSlice({
                     last_message : {},
                 }
 
-                state.users[friend_id].conversations_duo.push(duo_id);
-                state.users[current_user_id].conversations_duo.push(duo_id);
+                // // Ensure both users exist
+                // if (!state.users[current_user_id]) {
+                //   state.users[current_user_id] = {
+                //     id: current_user_id,
+                //     conversations_duo: [],
+                //     conversations_groups: [],
+                //     friends: [],
+                //     user_name: '',
+                //     img: '',
+                //   };
+                // }
+
+                // if (!state.users[friend_id]) {
+                //   state.users[friend_id] = {
+                //     id: friend_id,
+                //     conversations_duo: [],
+                //     conversations_groups: [],
+                //     friends: [],
+                //     user_name: '',
+                //     img: '',
+                //   };
+                // }
+
+                // // Ensure conversations_duo arrays exist
+                // if (!Array.isArray(state.users[current_user_id].conversations_duo)) {
+                //   state.users[current_user_id].conversations_duo = [];
+                // }
+
+                // if (!Array.isArray(state.users[friend_id].conversations_duo)) {
+                //   state.users[friend_id].conversations_duo = [];
+                // }
+
+        
+                if (!state.users[current_user_id].conversations_duo.includes(duo_id)) {
+                  state.users[current_user_id].conversations_duo.push(duo_id);
+                }
+
+                 //  if (!state.users[friend_id].conversations_duo.includes(duo_id)) {
+              //     state.users[friend_id].conversations_duo.push(duo_id);
+              //   }
+
+                // state.users[current_user_id].conversations_duo.push(duo_id);
+
+                // state.users[friend_id].conversations_duo.push(duo_id);
             }
 
             if(state.conversations_duo[duo_id].visible_for.indexOf(current_user_id)===-1){
@@ -96,14 +137,14 @@ export const dataSlice = createSlice({
             // if(state.conversations_groups[convo_id].admins)
 
             state.conversations_groups[convo_id].user_ids.push(user_id);
-            state.users[user_id].conversations_groups.push(convo_id);
+            // state.users[user_id].conversations_groups.push(convo_id);
 
-
+            //chatApp todo integrate with firestore
             // sample message structure
             // {   msg_id : "rihanna_taylorswift_1" ,data : { type: 'text', value: 'Hello' } ,
             //  timestamp : "00:01", user_id : "rihanna", delete_for: ["rihanna"]},
             const message = {
-                data : { type: "group", value: `${state.users[user_id].user_name} is added`} ,
+                data : { type: "group", value: `${state.usersPreviews[user_id].user_name} is added`} ,
                 timestamp : new Date().toString(), 
                 user_id : null, 
                 delete_for: []
@@ -125,14 +166,15 @@ export const dataSlice = createSlice({
             const user_index = state.conversations_groups[convo_id].user_ids.indexOf(user_id);
             state.conversations_groups[convo_id].user_ids.splice(user_index,1);
 
-            const convo_index = state.users[user_id].conversations_groups.indexOf(convo_id);
-            state.users[user_id].conversations_groups.splice(convo_index,1);
+            //chatApp todo need to add functionality to remove user properly in firestore
+            // const convo_index = state.users[user_id].conversations_groups.indexOf(convo_id);
+            // state.users[user_id].conversations_groups.splice(convo_index,1);
 
             // sample message structure
             // {   msg_id : "rihanna_taylorswift_1" ,data : { type: 'text', value: 'Hello' } ,
             //  timestamp : "00:01", user_id : "rihanna", delete_for: ["rihanna"]},
             const message = {
-                data : { type: "group", value: `${state.users[user_id].user_name} is removed`} ,
+                data : { type: "group", value: `${state.usersPreviews[user_id].user_name} is removed`} ,
                 timestamp : new Date().toString(), 
                 user_id : null, 
                 delete_for: []
@@ -183,10 +225,11 @@ export const dataSlice = createSlice({
         },
 
         userLogout: (state, action) => {
-            state.session_details.current_user_details = {}
-            state.session_details.current_convo_details = {}
-            state.session_details.loading = true
-            state.session_details.conversationsMetaLoading = true
+            // state.session_details.current_user_details = {}
+            // state.session_details.current_convo_details = {}
+            // state.session_details.loading = true
+            // state.session_details.conversationsMetaLoading = true
+            state.session_details = data.session_details
         },
         userLogin: (state, action) => {
 
@@ -262,50 +305,143 @@ export const dataSlice = createSlice({
                 id : id
             }
         },
-          
+        
+        setConvoMeta: (state, action) => {
+            const { id, convoType, data } = action.payload;
+            if (!state[`conversations_${convoType}`]) state[`conversations_${convoType}`] = {};
+            state[`conversations_${convoType}`][id] = {
+                ...(state[`conversations_${convoType}`][id] || {}),
+                ...data,
+        };
+        },
+        setConvoMessages: (state, action) => {
+            const { id, convoType, messages } = action.payload;
+            if (!state[`conversations_${convoType}`]) state[`conversations_${convoType}`] = {};
+            if (!state[`conversations_${convoType}`][id]) {
+                state[`conversations_${convoType}`][id] = {};
+            }
+            state[`conversations_${convoType}`][id].messages = messages;
+        },
+
     },
 
     extraReducers: (builder) => {
     builder
         //fetchUserData handlers
         .addCase(fetchUserData.pending, (state) => {
-        state.session_details.loading = true;
+            state.session_details.loading = true;
         })
         .addCase(fetchUserData.fulfilled, (state, action) => {
-        state.session_details.loading = false;
 
-        //setting data here itself
-        state.session_details.current_user_details = action.payload;
-        state.users[action.payload.id] = action.payload;
+            //setting data here itself
+            state.session_details.current_user_details = action.payload;
+            state.users[action.payload.id] = action.payload;
+            state.session_details.loading = false;
         })
         .addCase(fetchUserData.rejected, (state, action) => {
-        state.session_details.loading = false;
-        state.session_details.error = action.payload;
+            state.session_details.loading = false;
+            state.session_details.error = action.payload;
         })
 
         // fetchConversationsMetaByType handlers
         .addCase(fetchConversationsMetaByType.pending, (state) => {
-        state.session_details.conversationsMetaLoading = true;
+            state.session_details.conversationsMetaLoading = true;
         })
         .addCase(fetchConversationsMetaByType.fulfilled, (state, action) => {
-        state.session_details.conversationsMetaLoading = false;
+            state.session_details.conversationsMetaLoading = false;
         // Merge the fetched metadata into store
         // Object.entries(action.payload).forEach(([id, convoData]) => {
         //     state.conversations[id] = convoData;
         // });
-        const {results, type} = action.payload;
-        if (type === "group"){
-            state.conversations_groups = results
-        }else if (type === "duo"){
-            state.conversations_duo = results
-        }
+            const {results, type} = action.payload;
+            if (type === "group"){
+                state.conversations_groups = results
+            }else if (type === "duo"){
+                state.conversations_duo = results
+            }
 
         })
         .addCase(fetchConversationsMetaByType.rejected, (state, action) => {
-        state.conversationsMetaLoading = false;
-        state.conversationsMetaError = action.payload;
+            state.conversationsMetaLoading = false;
+            state.conversationsMetaError = action.payload;
+        })
+         
+
+                //fetch user Previews by ids
+
+        .addCase(fetchUserPreviewsThunk.pending, (state) => {
+            state.session_details.usersPreviewsLoading = true;
+            state.session_details.error = null;
+        })
+        .addCase(fetchUserPreviewsThunk.fulfilled, (state, action) => {
+            // action.payload.forEach((preview) => {
+            // state.usersPreviews[preview.user_id] = preview;
+            // });
+            // state.usersPreviews.push(...action.payload.fetched_result)
+            state.usersPreviews = {
+                ...state.usersPreviews,
+                ...action.payload
+            };
+            state.session_details.usersPreviewsLoading = false;
+        })
+        .addCase(fetchUserPreviewsThunk.rejected, (state, action) => {
+            state.session_details.usersPreviewsLoading = false;
+            state.session_details.error =  action.payload || "Failed to load user previews";
+        })
+
+
+        .addCase(fetchConvoMeta.pending, (state) => {
+            state.session_details.conversationsMetaLoading = true;
+        })
+        .addCase(fetchConvoMeta.fulfilled, (state, action) => {
+            const { id, data, convoType } = action.payload;
+            const key = `conversations_${convoType}`;
+            if (!state[key]) state[key] = {};
+            state[key][id] = {
+            ...(state[key][id] || {}),
+            ...data,
+            };
+            state.session_details.conversationsMetaLoading = false;
+        })
+        .addCase(fetchConvoMeta.rejected, (state) => {
+            state.session_details.conversationsMetaLoading = false;
+        })
+
+        .addCase(fetchMultipleConvoMeta.pending, (state) => {
+          state.session_details.conversationsMetaLoading = 
+            (state.session_details.conversationsMetaLoading || 0) + 1;
+        })
+        .addCase(fetchMultipleConvoMeta.fulfilled, (state, action) => {
+          const { type, results } = action.payload;
+          results.forEach(meta => {
+            state[`conversations_${type}`][meta.id] = { ...meta.data };
+          });
+          state.session_details.conversationsMetaLoading = 
+            Math.max((state.session_details.conversationsMetaLoading || 1) - 1, 0);
+        })
+        .addCase(fetchMultipleConvoMeta.rejected, (state, action) => {
+          state.session_details.conversationsMetaLoading = 
+            Math.max((state.session_details.conversationsMetaLoading || 1) - 1, 0);
+          state.session_details.error = action.payload || action.error?.message || "Unknown error";
+        })
+
+        .addCase(fetchConvoMessages.pending, (state) => {
+            state.session_details.messagesLoading = true;
+        })
+        .addCase(fetchConvoMessages.fulfilled, (state, action) => {
+               // console.log("fetchConvoMessages.fulfilled", action.payload, current_user_id, JSON.parse(JSON.stringify(state)), state.users)
+            const { id, messages, convoType } = action.payload;
+            const key = `conversations_${convoType}`;
+            if (!state[key]) state[key] = {};
+            if (!state[key][id]) state[key][id] = {};
+            state[key][id].messages = messages;
+        })
+        .addCase(fetchConvoMessages.rejected, (state) => {
+            state.session_details.messagesLoading = false;
         });
-    },
+
+
+        }       
 })
 
 
@@ -355,6 +491,12 @@ export const selectUserFriends = (userId) => (state) => state.dataReducer.users[
 //     const user = state.dataReducer.users[id];
 //     return user ? { user_id: id, img: user.img, user_name: user.user_name } : null;
 //   });
+
+export const selectUserPreviewsByIds = (state, userIds) => {
+  const all = state.dataReducer.usersPreviews;
+  return userIds.map(id => all.find(u => u.user_id === id)).filter(Boolean);
+};
+
 
 //reselect selectors for caching
 export const makeSelectUsersPreviewByIds = () => createSelector(
@@ -482,12 +624,12 @@ export const fetchUserData = createAsyncThunk(
     async (uid, thunkAPI) => {
     try {
         const userDoc = await getDoc(doc(db, "users", uid));
-        // console.log("fetchuserdata", "fetching user")
+        console.log("fetchuserdata", "fetching user")
         if (userDoc.exists()) return userDoc.data();
-        // console.log("fetchuserdata", "user not found")
+        console.log("fetchuserdata", "user not found")
         return thunkAPI.rejectWithValue("User not found");
     } catch (err) {
-        // console.log("fetchuserdata", err)
+        console.log("fetchuserdata error", err)
         return thunkAPI.rejectWithValue(err.message);
     }
     }
@@ -519,6 +661,110 @@ export const handleLogout = createAsyncThunk(
 );
 
 
+//Fetch user previews (id, img, name) 
+
+// export async function fetchUserPreviewsByIds(userIds) {
+//   const previews = [];
+
+//   for (const id of userIds) {
+//     try {
+//       const docSnap = await getDoc(doc(db, "users", id));
+//       if (docSnap.exists()) {
+//         const user = docSnap.data();
+//         previews.push({
+//           user_id: id,
+//           img: user.img || null,
+//           user_name: user.user_name || "",
+//         });
+//       }
+//     } catch (error) {
+//       console.error(`Error fetching user ${id}:`, error);
+//     }
+//   }
+
+//   return previews;
+// }
+
+// export const fetchUserPreviewsThunk = createAsyncThunk(
+//   "users/fetchPreviews",
+//   async (userIds, thunkAPI) => {
+//     try {
+//       const previews = [];
+//       const chunks = [];
+
+//       for (let i = 0; i < userIds.length; i += 10) {
+//         chunks.push(userIds.slice(i, i + 10));
+//       }
+
+//       for (const chunk of chunks) {
+//         const q = query(collection(db, "users"), where("__name__", "in", chunk));
+//         const snapshot = await getDocs(q);
+
+//         snapshot.forEach((doc) => {
+//           const user = doc.data();
+//           previews.push({
+//             user_id: doc.id,
+//             img: user.img || null,
+//             user_name: user.user_name || "",
+//           });
+//         });
+//       }
+
+//       return previews;
+//     } catch (error) {
+//       return thunkAPI.rejectWithValue(error.message);
+//     }
+//   }
+// );
+
+//cached comparision and fetch
+export const fetchUserPreviewsThunk = createAsyncThunk(
+  "users/fetchUserPreviewsByIds",
+  async (userIds, { getState, rejectWithValue }) => {
+    try {
+      const state = getState();
+      const alreadyInStore = state.dataReducer.usersPreviews;
+      const idsToFetch = userIds.filter(id => !alreadyInStore[id]);
+
+      const result = {};
+
+      // Add already cached users
+      userIds.forEach(id => {
+        if (alreadyInStore[id]) {
+          result[id] = {
+            user_id: id,
+            img: alreadyInStore[id].img || null,
+            user_name: alreadyInStore[id].user_name || "",
+          };
+        }
+      });
+
+      // Firestore chunked fetch
+      for (let i = 0; i < idsToFetch.length; i += 10) {
+        const chunk = idsToFetch.slice(i, i + 10);
+        const q = query(collection(db, "users"), where("__name__", "in", chunk));
+        const snapshot = await getDocs(q);
+        snapshot.forEach(doc => {
+          const user = doc.data();
+          result[doc.id] = {
+            user_id: doc.id,
+            img: user.img || null,
+            user_name: user.user_name || "",
+          };
+        });
+      }
+
+      return result; // final object keyed by user_id
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+
+
+
+//convos meta data, list of convo_ids  => (all prop except messages)
 export const fetchConversationsMetaByType = createAsyncThunk(
   "data/fetchMetaByType",
   async ({ ids, type }, thunkAPI) => {
@@ -544,3 +790,92 @@ export const fetchConversationsMetaByType = createAsyncThunk(
     }
   }
 );
+
+
+// Fetch messages once if not in cache
+export const fetchConvoMessages = createAsyncThunk(
+  "data/fetchConvoMessages",
+  async ({ convoId, convoType }, { rejectWithValue }) => {
+    try {
+      let type = convoType === "group" ? "groups" : convoType;
+      const msgRef = collection(db, `conversations_${type}`, convoId, "messages");
+      const q = query(msgRef, orderBy("timestamp", "asc"));
+      const snapshot = await getDocs(q);
+      const messages = snapshot.docs.map(doc => ({ msg_id: doc.id, ...doc.data() }));
+      const result = { id: convoId, convoType: type, messages };
+      console.log("fetch Convo messages" , result)
+      return result;
+
+    } catch (e) {
+      return rejectWithValue(e.message);
+    }
+  },
+  {
+    condition: ({ convoId, convoType }, { getState }) => {
+      const state = getState();
+      const key = `conversations_${convoType === "group" ? "groups" : convoType}`;
+      console.log("fetching convo messages: ", !state.dataReducer[key][convoId].messages)
+      return !state.dataReducer[key][convoId].messages;
+    }
+  }
+);
+
+// Fetch metadata once if not in cache
+export const fetchConvoMeta = createAsyncThunk(
+  "data/fetchConvoMeta",
+  async ({ convoId, convoType }, { rejectWithValue }) => {
+    try {
+      let type = convoType === "group" ? "groups" : convoType;
+      const docRef = doc(db, `conversations_${type}`, convoId);
+      console.log("fetching Convo meta result" , convoId, convoType)
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) throw new Error("Meta not found");
+      const result = { id: convoId, convoType: type, data: snap.data() }
+      console.log("fetched Convo meta result" , result)
+      return result;
+    } catch (e) {
+      console.log("fetch Convo meta error " , e)
+      return rejectWithValue(e.message);
+    }
+  },
+  {
+    condition: ({ convoId, convoType }, { getState }) => {
+      const state = getState();
+      const key = `conversations_${convoType === "group" ? "groups" : convoType}`;
+      console.log("fetching convo meta condition: ", !state.dataReducer[key][convoId])
+      return !state.dataReducer[key][convoId];
+    }
+  }
+);
+
+
+
+export const fetchMultipleConvoMeta = createAsyncThunk(
+  "data/fetchMultipleConvoMeta",
+  async ({ convoIds, convoType }, { getState, rejectWithValue }) => {
+    try {
+      const state = getState();
+      const type = convoType === "group" ? "groups" : convoType;
+      const missingIds = convoIds.filter(id => {
+        const data = state.dataReducer[`conversations_${type}`][id];
+        return !data || !data.id;
+      });
+
+      const fetchPromises = missingIds.map(async convoId => {
+        const docRef = doc(db, `conversations_${type}`, convoId);
+        const snap = await getDoc(docRef);
+        if (!snap.exists()) throw new Error(`Meta not found for ${convoId}`);
+        return { id: convoId, convoType: type, data: snap.data() };
+      });
+
+      console.log("fetching  Convo multiple meta " , convoIds)
+      const results = await Promise.all(fetchPromises);
+       console.log("fetched Convo multiple meta results  " , results)
+      return { type, results }; // send both type and all fetched metadata
+    } catch (e) {
+      console.log("fetched Convo multiple meta error  " , e)
+      return rejectWithValue(e.message);
+    }
+  }
+);
+

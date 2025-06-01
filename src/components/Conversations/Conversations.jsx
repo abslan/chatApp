@@ -6,7 +6,7 @@ import {useDispatch, useSelector} from "react-redux";
 
 import styles from "./Conversations.module.css";
 import { sessionDetailsSelector, dataActions,
-    selectUserById, makeSelectUsersPreviewByIds
+    selectUserById
  } from "../../redux/reducers/dataReducer";
 
 //chat app todo : add function to render different data types // add styling to  them only user type remains !important
@@ -14,29 +14,52 @@ import { sessionDetailsSelector, dataActions,
 import Header from "./Header";
 import {ConversationList} from "./ConversationList";
 // import { MemberDropdown } from "../Chatbox/MemberDropdown";
-import {  useMemo } from "react";
+import {  useEffect } from "react";
 import DropdownUserCard from "./DropdownUserCard";
+
+import { fetchUserPreviewsThunk } from "../../redux/reducers/dataReducer";
 
 
 export default function Conversations(){
 
     //chatApp todo get conversations details of only users chats, and pass only convo ids list,and type
-    // and inside convoList comp, getDetails using selector,  also, load the
+    // and inside convoList component, getDetails using selector,  also, load the
     // chatApp todo load conversations details of only users chats from server on initial render and store in redux 
     // const {conversations_duo, conversations_groups, users, session_details} = useSelector(dataSelector);
     // const current_user_id = "taylorswift";
     console.log("conversations rendered")
 
-    const {theme, current_user_details}= useSelector(sessionDetailsSelector);
+     const dispatch = useDispatch();
 
+
+
+    //GETTING CURRENT USER DETAILS FROM SESSION
+    const {theme, current_user_details}= useSelector(sessionDetailsSelector);
     const current_user_id = current_user_details.id
     // const current_user = users[current_user_details.id];
     const current_user = useSelector(selectUserById(current_user_id))
-    // const current_user_friends = useSelector(selectUserFriends(current_user_id))
-    const selectUsersPreviewByIds = useMemo(makeSelectUsersPreviewByIds, []);
-    const userFriendsPreview = useSelector(state => selectUsersPreviewByIds(state, current_user.friends));
+    console.log("conerations current user", current_user)
 
-    const dispatch = useDispatch();
+    
+    // getting user friends previews to load in duo convo dropdown 
+    // const selectUsersPreviewByIds = useMemo(makeSelectUsersPreviewByIds, []);
+    // const userFriendsPreview = useSelector(state => selectUsersPreviewByIds(state, current_user.friends));
+
+    //fetch user Preview from firestore
+    useEffect(()=> {
+        dispatch(fetchUserPreviewsThunk(current_user.friends))
+    }, [dispatch, current_user.friends])
+
+    const allUsersPreviews = useSelector(state => state.dataReducer.usersPreviews);
+    console.log("coversations all user previews", allUsersPreviews)
+    const userFriendsPreview = current_user.friends.map( id => allUsersPreviews[id]).filter(Boolean); 
+    console.log("coversations user previews", userFriendsPreview)
+
+    const usersPreviewsLoading = useSelector(state => state.dataReducer.usersPreviewsLoading);
+    if (usersPreviewsLoading || userFriendsPreview.length !== current_user.friends.length){
+        //chatApp todo implement fallback UI 
+        return <div>Loading....</div>
+    }
 
     // const handleCardClick = (event, data) => {
     //     dispatch(dataActions.handleCardClick(data))
@@ -51,56 +74,7 @@ export default function Conversations(){
     //     () => <MdAddCircleOutline className={styles.add_btn} size={20}/>, []
     //   )
 
-    // const [startX, setStartX] = useState(null);
 
-    // const handleSwipeStart = (event, data) => {
-    //     event.stopPropagation();
-    //     event.preventDefault();
-    //     if (event.type === 'mousedown') {
-    //     setStartX(event.clientX);
-    //     } else if (event.type === 'touchstart') {
-    //     setStartX(event.touches[0].clientX);
-    //     }
-    // };
-
-    // const handleSwipeEnd = (event, data) => {
-    //     //chatapp todo need id and 
-    //     event.stopPropagation();
-    //     event.preventDefault();
-    //     if (startX === null) return;
-
-    //     const currentX = event.type === 'mouseup' ? event.clientX : event.changedTouches[0].clientX;
-    //     const deltaX = currentX - startX;
-
-    //     const ele = event.currentTarget
-    //     const {type, id} = data
-
-    //     // console.log(deltaX)
-    //     if( deltaX === 0){
-    //         dispatch(dataActions.handleCardClick({type, id}))
-    //     }
-    //     else if (-100 <= deltaX && deltaX < -50) {
-    //         //chatapp todo add fade out animation
-    //         if(ele.classList.contains(styles.fade_out_animation)){
-    //             ele.classList.toggle((styles.fade_out_animation))
-    //         }  
-    //         if(!ele.classList.contains(styles.fade_out_center_animation)){
-    //             ele.classList.toggle((styles.fade_out_center_animation))
-    //         }    
-    //     }
-    //     else if (deltaX < -100) {
-    //         //chatapp todo add visible in data & set and remove
-    //         if(ele.classList.contains(styles.fade_out_center_animation)){
-    //             ele.classList.toggle((styles.fade_out_center_animation))
-    //         }  
-    //         if(!ele.classList.contains(styles.fade_out_animation)){
-    //             ele.classList.toggle((styles.fade_out_animation))
-
-    //             setTimeout(() => dispatch(dataActions.hideCard({type, id})), 3000)
-    //         }        
-    //     }
-    //     setStartX(null);
-    // };
 
     return (
         <div className={theme === "dark" ? `${styles.conversations_container} ${  styles.dark_theme}` : `${styles.conversations_container}`}>
@@ -122,21 +96,13 @@ export default function Conversations(){
             </Header>
             <ConversationList
                 current_user_convo_list={current_user.conversations_duo}
-                // convo_list={conversations_duo}
-                // users={users}
                 currentUserId={current_user_id}
-                // onSwipeStart={handleSwipeStart}
-                // onSwipeEnd={handleSwipeEnd}
                 type="duo"
             />
             <Header title="GROUPS" />
             <ConversationList
                 current_user_convo_list={current_user.conversations_groups}
-                // convo_list={conversations_groups}
-                // users={users}
                 currentUserId={current_user_id}
-                // onSwipeStart={handleSwipeStart}
-                // onSwipeEnd={handleSwipeEnd}
                 type="group"
             />
         </div>

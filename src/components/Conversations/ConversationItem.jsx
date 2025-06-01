@@ -2,10 +2,10 @@ import {MdOutlineUnfoldMore} from "react-icons/md";
 
 import styles from './Conversations.module.css';
 import LastMessage from './LastMessage';
-import { formatTimestamp, truncate, formatImageSource, dataActions, makeSelectUsersPreviewByIds } from '../../redux/reducers/dataReducer';
+import { formatTimestamp, truncate, formatImageSource, dataActions,fetchUserPreviewsThunk } from '../../redux/reducers/dataReducer';
 
 import { useGroupOnlineStatus } from "../../firebase_files/realtimeUtils";
-import { memo, useState , useMemo} from "react";
+import { memo, useState, useEffect } from "react";
 
 import {useDispatch, useSelector} from "react-redux";
 
@@ -68,22 +68,39 @@ export const ConversationItem = memo(({ convo, otherUsersIds, type,
     };
 
 
-  // console.log("convo items rendered ", otherUsersIds)
+  console.log("convo items rendered ", otherUsersIds)
   const { anyOnline } = useGroupOnlineStatus(otherUsersIds);
   const last = convo.last_message//?.length > 0 ?  convo.messages[convo.messages.length - 1] : null;
   // console.log("anyonline", anyOnline)
   // console.log("lasstmessage", last, convo.last_message)
 
-  const selectUsersPreviewByIds = useMemo(makeSelectUsersPreviewByIds, []);
-  const otherUsers = useSelector(state => selectUsersPreviewByIds(state, otherUsersIds));
-  // console.log("convo items rendered otherusers", otherUsers)
-  // convo_id, 
-  // convo_name,
-  // convo_type
-  // convo_users preview (other than current, only 2 needed), and online status
-  // last message of convo
+  //fetch other members of convo previews
+  // const selectUsersPreviewByIds = useMemo(makeSelectUsersPreviewByIds, []);
+  // const otherUsers = useSelector(state => selectUsersPreviewByIds(state, otherUsersIds));
 
+  
+  useEffect(()=> {
+        dispatch(fetchUserPreviewsThunk(otherUsersIds))
+         // eslint-disable-next-line 
+    }, [] )
+
+    const allUsersPreviews = useSelector(state => state.dataReducer.usersPreviews);
+    // console.log("convo item all user previews", allUsersPreviews)
+    const otherUsers = otherUsersIds.map( id => allUsersPreviews[id]).filter(Boolean)
+    console.log("convo item user previews", otherUsers)
+
+
+
+  // console.log("convo items rendered otherusers", otherUsers)
+  // convo_id,  convo_name, convo_type, convo_users preview (other than current, only 2 needed), and online status last message of convo
   // can fetch all these from convo id and type, and swipe wet , and need current user id to get
+
+
+  console.log(`convo item ${convo?.id}`, otherUsers)
+
+  if(otherUsersIds.length !== otherUsers.length){
+    return null
+  }
 
   return (
     <div
