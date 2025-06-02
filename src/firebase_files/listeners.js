@@ -20,12 +20,25 @@ export const useConvoListeners = (convoId, convoType) => {
 
     const unsubMeta = onSnapshot(metaRef, (docSnap) => {
       if (docSnap.exists()) {
-        dispatch(dataActions.setConvoMeta({ id: convoId,  convoType: type, data: docSnap.data() }));
+        const data = docSnap.data();
+        if (data.last_message?.timestamp?.toMillis) {
+          data.last_message.timestamp = data.last_message.timestamp.toMillis(); // serialize
+        }
+        dispatch(dataActions.setConvoMeta({ id: convoId,  convoType: type, data: data}));
       }
     });
 
     const unsubMessages = onSnapshot(query(messagesRef, orderBy("timestamp", "asc")), (snap) => {
-      const messages = snap.docs.map(doc => ({ msg_id : doc.id, ...doc.data() }));
+      const messages = snap.docs.map(doc => {
+        const data = doc.data();
+        return {
+          msg_id: doc.id,
+          ...data,
+          timestamp: data.timestamp?.toMillis?.() || null, // convert Firestore Timestamp
+        };
+      }//({ msg_id : doc.id, ...doc.data() })
+    
+    );
       dispatch(dataActions.setConvoMessages({ id: convoId, convoType: type, messages }));
     });
 

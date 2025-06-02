@@ -1,5 +1,5 @@
 import styles from './Chatbox.module.css';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { selectSessionUserId } from '../../redux/reducers/dataReducer';
 
@@ -9,16 +9,26 @@ export const TypingIndicator = memo(({ typingList }) => {
 
   const currentUserId = useSelector(selectSessionUserId);
 
-  const typingListUsersPreview = useSelector((state) => {
-      return typingList.slice(0,2).map( id => {
-          if(id !== currentUserId) {
-              return state.dataReducer.usersPreviews[id]
-          }else {
-              return state.dataReducer.users[currentUserId]
-          }
-        })
-      } 
-    );
+  const usersPreviews = useSelector(state => state.dataReducer.usersPreviews);
+  const users = useSelector(state => state.dataReducer.users);
+
+  const typingListUsersPreview = useMemo(() => {
+    return typingList
+      .slice(0, 2)
+      .map(id => id !== currentUserId ? usersPreviews[id] : users[currentUserId])
+      .filter(Boolean);
+  }, [typingList, currentUserId, usersPreviews, users]);
+
+  // const typingListUsersPreview = useSelector((state) => {
+  //     return typingList.slice(0,2).map( id => {
+  //         if(id !== currentUserId) {
+  //             return state.dataReducer.usersPreviews[id]
+  //         }else {
+  //             return state.dataReducer.users[currentUserId]
+  //         }
+  //       })
+  //     } 
+  //   );
   
   console.log("typing List users preview", typingListUsersPreview)
   // return null

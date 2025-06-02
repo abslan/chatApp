@@ -923,7 +923,12 @@ export const fetchMultipleConvoMeta = createAsyncThunk(
         const docRef = doc(db, `conversations_${type}`, convoId);
         const snap = await getDoc(docRef);
         if (!snap.exists()) throw new Error(`Meta not found for ${convoId}`);
-        return { id: convoId, convoType: type, data: snap.data() };
+
+        const data = snap.data();
+        if (data.last_message?.timestamp?.toMillis) {
+          data.last_message.timestamp = data.last_message.timestamp.toMillis(); // or toDate().toISOString()
+        }
+        return { id: convoId, convoType: type, data: data };
       });
 
       console.log("fetching  Convo multiple meta " , convoIds)
