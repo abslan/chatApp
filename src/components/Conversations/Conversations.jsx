@@ -53,7 +53,7 @@ export default function Conversations(){
     const allUsersPreviews = useSelector(state => state.dataReducer.usersPreviews);
     console.log("coversations all user previews", allUsersPreviews)
     const userFriendsPreview = current_user.friends.map( id => allUsersPreviews[id]).filter(Boolean); 
-    console.log("coversations user previews", userFriendsPreview)
+    console.log("coversations user previews", userFriendsPreview, current_user)
 
     const usersPreviewsLoading = useSelector(state => state.dataReducer.usersPreviewsLoading);
     if (usersPreviewsLoading || userFriendsPreview.length !== current_user.friends.length){

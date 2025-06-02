@@ -11,8 +11,14 @@ import { db } from "../../firebase_files/config";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase_files/config";
 
-import { ref, set, serverTimestamp } from 'firebase/database';
+import { ref, set } from 'firebase/database';
 import { realtime_db } from "../../firebase_files/config";
+
+import { v4 as uuidv4 } from 'uuid';
+import { addDoc, deleteDoc, updateDoc, arrayRemove, arrayUnion } from "firebase/firestore";
+
+import { serverTimestamp as firestoreTimestamp } from 'firebase/firestore';
+import { serverTimestamp as rtdbTimestamp } from 'firebase/database';
 
 
 // const INITIAL_STATE = data;
@@ -229,7 +235,7 @@ export const dataSlice = createSlice({
             // state.session_details.current_convo_details = {}
             // state.session_details.loading = true
             // state.session_details.conversationsMetaLoading = true
-            state.session_details = data.session_details
+            return { ...data };
         },
         userLogin: (state, action) => {
 
@@ -458,7 +464,7 @@ export const dataSlice = createSlice({
 
           if (!convo.messages) convo.messages = [];
 
-          convo.messages = [...messages, ...convo.messages]; // already reversed in thunk
+          convo.messages = [ ...convo.messages, ...messages]; // already reversed in thunk
           convo.lastVisible = lastVisible;
           convo.messagesFullyLoaded = fullyLoaded;
 
@@ -491,13 +497,25 @@ function getDuoId(str1, str2){
 }
 
 const weekday = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-export function formatTimestamp(str){
-    const date = new Date(str);
-    if(date.toDateString() === new Date().toDateString()){
-        return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    }else{
-        return weekday[date.getDay()] + " " + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    }
+export function formatTimestamp(ts) {
+  let date;
+
+  if (ts instanceof Date) {
+    date = ts;
+  } else if (ts?.toDate) {
+    date = ts.toDate(); // Firestore Timestamp object
+  } else if (typeof ts === 'string' || typeof ts === 'number') {
+    date = new Date(ts);
+  } else {
+    return ''; // invalid timestamp
+  }
+
+  const today = new Date();
+  if (date.toDateString() === today.toDateString()) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else {
+    return weekday[date.getDay()] + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
 }
 
 export const dataReducer = dataSlice.reducer;
@@ -566,26 +584,26 @@ export const selectSessionLoadingState = (state) => state.dataReducer.session_de
 
 export const selectConvoUserIds = (convo_id, type) => (state) => {
     if (type==="group"){
-        return state.dataReducer.conversations_groups[convo_id].user_ids;
+        return state.dataReducer.conversations_groups[convo_id]?.user_ids;
     }else if(type === "duo"){
-        return state.dataReducer.conversations_duo[convo_id].user_ids;
+        return state.dataReducer.conversations_duo[convo_id]?.user_ids;
     }  
 }
 export const selectConvoName = (convo_id) => (state) => state.dataReducer.conversations_groups[convo_id]?.name;
 
 export const selectConvoMessages =  (convo_id, type) => (state) => {
     if (type==="group"){
-        return state.dataReducer.conversations_groups[convo_id].messages;
+        return state.dataReducer.conversations_groups[convo_id]?.messages;
     }else if(type === "duo"){
-        return state.dataReducer.conversations_duo[convo_id].messages;
+        return state.dataReducer.conversations_duo[convo_id]?.messages;
     }  
 }
 
 export const selectConvoTypingList =  (convo_id, type) => (state) => {
     if (type==="group"){
-        return state.dataReducer.conversations_groups[convo_id].typing;
+        return state.dataReducer.conversations_groups[convo_id]?.typing;
     }else if(type === "duo"){
-        return state.dataReducer.conversations_duo[convo_id].typing;
+        return state.dataReducer.conversations_duo[convo_id]?.typing;
     }  
 }
 
@@ -671,16 +689,19 @@ export const handleLogout = createAsyncThunk(
         //real time updates of online status
         const user = auth.currentUser;
         if (user) {
-        const id = formatEmailToId(user.email)
-        const userStatusRef = ref(realtime_db, `/status/${id}`);
+          const id = formatEmailToId(user.email)
+          const userStatusRef = ref(realtime_db, `/status/${id}`);
 
-        await set(userStatusRef, {
-            isOnline: false,
-            lastSeen: serverTimestamp(),
-        });
+          await set(userStatusRef, {
+              isOnline: false,
+              lastSeen: rtdbTimestamp(),
+          });
         }
 
         await signOut(auth);
+
+        localStorage.removeItem('dataState');
+
         thunkAPI.dispatch(dataActions.userLogout()); 
     } catch (error) {
         return thunkAPI.rejectWithValue(error.message);
@@ -829,7 +850,16 @@ export const fetchConvoMessages = createAsyncThunk(
       const msgRef = collection(db, `conversations_${type}`, convoId, "messages");
       const q = query(msgRef, orderBy("timestamp", "asc"));
       const snapshot = await getDocs(q);
-      const messages = snapshot.docs.map(doc => ({ msg_id: doc.id, ...doc.data() }));
+      const messages = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          msg_id: doc.id,
+          ...data,
+          timestamp: data.timestamp?.toDate()?.toISOString() || null, // Convert Firestore Timestamp to string
+        }
+    }
+        // ({ msg_id: doc.id, ...doc.data() })
+      );
       const result = { id: convoId, convoType: type, messages };
       console.log("fetch Convo messages" , result)
       return result;
@@ -974,4 +1004,63 @@ export const fetchPaginatedMessages = createAsyncThunk(
   }
 );
 
+
+
+export const sendMessageToFirestore = createAsyncThunk(
+  'data/sendMessageToFirestore',
+  async ({ convoId, convoType, message }, thunkAPI) => {
+    const type = convoType === 'group' ? 'groups' : 'duo';
+    const messagesRef = collection(db, `conversations_${type}`, convoId, 'messages');
+    const convoRef = doc(db, `conversations_${type}`, convoId);
+
+    const msgDoc = {
+      msg_id: uuidv4(),
+      data: { type: message.type, value: message.value },
+      timestamp: firestoreTimestamp(),
+      user_id: message.user_id,
+      delete_for: []
+    };
+    await addDoc(messagesRef, msgDoc);
+    // No need to dispatch manually here; listener updates Redux
+    await updateDoc(convoRef, {
+      last_message: {
+        ...msgDoc,
+        timestamp: firestoreTimestamp() // use again for consistency
+      }
+    });
+
+    return msgDoc;
+  }
+);
+
+export const deleteMessageFromFirestore = createAsyncThunk(
+  //chatApp todo delete message funcitonality not included in app
+  'data/deleteMessageFromFirestore',
+  async ({ convoId, convoType, msgId }, thunkAPI) => {
+    const type = convoType === 'group' ? 'groups' : 'duo';
+    const msgDocRef = doc(db, `conversations_${type}`, convoId, 'messages', msgId);
+    await deleteDoc(msgDocRef);
+    // Listener will sync state after deletion
+    return msgId;
+  }
+);
+
+export const updateTypingStatusInFirestore = createAsyncThunk(
+  'data/updateTypingStatusInFirestore',
+  async ({ convoId, convoType, status, userId }, thunkAPI) => {
+    const type = convoType === 'group' ? 'groups' : 'duo';
+    const convoDocRef = doc(db, `conversations_${type}`, convoId);
+
+    console.log("updateTypingStatusInFirestore", convoId, convoType, status, userId )
+    if (status === 'typing') {
+      await updateDoc(convoDocRef, { typing: arrayUnion(userId) });
+    } 
+    else if (status === 'finished') {
+      await updateDoc(convoDocRef, { typing: arrayRemove(userId) });
+    }
+    console.log("updated StatusInFirestore", convoId, convoType, status, userId )
+
+    return { status, userId };
+  }
+);
 

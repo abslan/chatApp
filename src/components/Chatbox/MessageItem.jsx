@@ -19,7 +19,7 @@ export const MessageItem = React.memo(({ message }) => {
         }else {
             return state.dataReducer.users[currentUserId]
         }}
-);
+    );
 
     const isOwn = message.user_id === currentUserId;
 
@@ -30,7 +30,7 @@ export const MessageItem = React.memo(({ message }) => {
         )
     }
 
-    console.log("message item",  user)
+    console.log("message item",  user, message)
 
     if(!user){
         return <div>loading...</div>
