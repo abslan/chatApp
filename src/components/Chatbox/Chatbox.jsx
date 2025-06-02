@@ -10,7 +10,7 @@ import {ChatHeader} from './ChatHeader';
 import { TypingIndicator } from './TypingIndicator';
 
 import { useEffect } from 'react';
-import { fetchConvoMeta, fetchConvoMessages } from '../../redux/reducers/dataReducer';
+import { fetchConvoMeta, fetchPaginatedMessages } from '../../redux/reducers/dataReducer';
 import { useConvoListeners } from '../../firebase_files/listeners';
 
 
@@ -19,7 +19,7 @@ export default function Chatbox() {
     const dispatch = useDispatch();
 
     const session_details  = useSelector(sessionDetailsSelector);
-    const { current_convo_details, theme } =   session_details// useSelector(sessionDetailsSelector);
+    const { current_convo_details, theme, messagesLoading } =   session_details// useSelector(sessionDetailsSelector);
     console.log("chatbox session details", session_details )
     const { id: convoId, type: convoType } = current_convo_details;
     
@@ -31,15 +31,26 @@ export default function Chatbox() {
     const messages = convoData?.messages || [];
     const typingList = convoData?.typing || [];
 
+    const lastVisible = convoData?.lastVisible;
+    const fullyLoaded = convoData?.messagesFullyLoaded;
+
+    const handleFetchMore = () => {
+    if (!fullyLoaded && !messagesLoading) {
+        dispatch(fetchPaginatedMessages({ convoId, convoType, lastVisible }));
+    }
+    };
+    
+
     console.log("chatbox messages details", messages )
 
     //fetching from store initial fetch and listening
     useEffect(() => {
         if (convoId && convoType) {
             dispatch(fetchConvoMeta({ convoId, convoType }));
-            dispatch(fetchConvoMessages({ convoId, convoType }));
+            // dispatch(fetchConvoMessages({ convoId, convoType }));
+            if(messages.length === 0) dispatch(fetchPaginatedMessages({ convoId, convoType, lastVisible }));
         }
-    }, [convoId, convoType, dispatch]);
+    }, [convoId, convoType, dispatch, messages.length, lastVisible]);
 
     useConvoListeners(convoId, convoType);
 
@@ -76,6 +87,7 @@ export default function Chatbox() {
         />
         <MessageList
             messages={messages}
+            onScrollTop={handleFetchMore}
         />
         <TypingIndicator
             typingList={typingList}

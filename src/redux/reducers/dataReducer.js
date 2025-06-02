@@ -5,7 +5,7 @@ import { createSelector } from "@reduxjs/toolkit";
 
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getDoc, doc, getDocs ,  collection, query, where, orderBy } from "firebase/firestore";
+import { getDoc, doc, getDocs ,  collection, query, where, orderBy, limit, startAfter } from "firebase/firestore";
 import { db } from "../../firebase_files/config";
 
 import { signOut } from "firebase/auth";
@@ -414,7 +414,13 @@ export const dataSlice = createSlice({
         .addCase(fetchMultipleConvoMeta.fulfilled, (state, action) => {
           const { type, results } = action.payload;
           results.forEach(meta => {
-            state[`conversations_${type}`][meta.id] = { ...meta.data };
+            state[`conversations_${type}`][meta.id] = { 
+              ...meta.data,
+              messages: [],
+              lastVisible: null, 
+              messagesFullyLoaded: false,
+            
+            };
           });
           state.session_details.conversationsMetaLoading = 
             Math.max((state.session_details.conversationsMetaLoading || 1) - 1, 0);
@@ -438,8 +444,30 @@ export const dataSlice = createSlice({
         })
         .addCase(fetchConvoMessages.rejected, (state) => {
             state.session_details.messagesLoading = false;
-        });
+        })
 
+
+
+        .addCase(fetchPaginatedMessages.pending, (state) => {
+          state.session_details.messagesLoading = true;
+        })
+        .addCase(fetchPaginatedMessages.fulfilled, (state, action) => {
+          const { convoId, convoType, messages, lastVisible, fullyLoaded } = action.payload;
+          const key = `conversations_${convoType}`;
+          const convo = state[key][convoId];
+
+          if (!convo.messages) convo.messages = [];
+
+          convo.messages = [...messages, ...convo.messages]; // already reversed in thunk
+          convo.lastVisible = lastVisible;
+          convo.messagesFullyLoaded = fullyLoaded;
+
+          state.session_details.messagesLoading = false;
+        })
+        .addCase(fetchPaginatedMessages.rejected, (state, action) => {
+          state.session_details.messagesLoading = false;
+          state.session_details.error = action.payload || action.error.message;
+        });
 
         }       
 })
@@ -878,4 +906,72 @@ export const fetchMultipleConvoMeta = createAsyncThunk(
     }
   }
 );
+
+
+
+
+export const fetchPaginatedMessages = createAsyncThunk(
+  "data/fetchPaginatedMessages",
+  async ({ convoId, convoType, lastVisible }, { rejectWithValue }) => {
+    try {
+      const type = convoType === "group" ? "groups" : convoType;
+      const msgRef = collection(db, `conversations_${type}`, convoId, "messages");
+      // const q = lastVisible
+      //   ? query(msgRef, orderBy("timestamp", "desc"), startAfter(lastVisible), limit(20))
+      //   : query(msgRef, orderBy("timestamp", "desc"), limit(20));
+
+      let q = query(msgRef, orderBy("timestamp", "desc"), limit(20));
+
+      if (lastVisible?.id) {
+        const lastDocSnap = await getDoc(doc(msgRef, lastVisible.id));
+        if (lastDocSnap.exists()) {
+          q = query(msgRef, orderBy("timestamp", "desc"), startAfter(lastDocSnap), limit(20));
+        }
+      }
+
+      console.log("fetching paginated messages", convoId, convoType, lastVisible  )
+      const snapshot = await getDocs(q);
+      const messages = snapshot.docs.map(doc => {
+        // msg_id: doc.id,
+        // ...doc.data(),
+        // timestamp: doc.data().timestamp.toMillis()// This ensures  messages' timestamps are also serializable for Redux
+        const data = doc.data()
+        return {
+          msg_id: doc.id,
+          ...data,
+          timestamp: data.timestamp?.toMillis ? data.timestamp.toMillis() : data.timestamp
+        }
+      });
+      const lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+      const result = {
+        convoId,
+        convoType: type,
+        messages: messages.reverse(), // earliest first
+        // lastVisible: snapshot.docs[snapshot.docs.length - 1] || null,// This is non-serializable Firestore object, cant store in redux
+        lastVisible: lastVisibleDoc ? {
+          id: lastVisibleDoc.id,
+          // timestamp: lastVisibleDoc.data().timestamp.toMillis()  // convert Firestore Timestamp to number
+          timestamp: lastVisibleDoc.data().timestamp?.toMillis
+          ? lastVisibleDoc.data().timestamp.toMillis()
+          : lastVisibleDoc.data().timestamp
+        } : null,
+        fullyLoaded: snapshot.size < 20
+      }
+      console.log("fetched paginated messages", result )
+      return result;
+    } catch (e) {
+      console.log("fetch paginated messages error", e )
+      return rejectWithValue(e.message);
+    }
+  },
+  {
+    condition: ({ convoId, convoType }, { getState }) => {
+      const state = getState();
+      const type = convoType === "group" ? "groups" : convoType;
+      const convo = state.dataReducer[`conversations_${type}`]?.[convoId];
+      return !(convo?.messagesFullyLoaded); // skip if already fully loaded
+    }
+  }
+);
+
 
