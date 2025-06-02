@@ -1013,9 +1013,26 @@ export const sendMessageToFirestore = createAsyncThunk(
     const messagesRef = collection(db, `conversations_${type}`, convoId, 'messages');
     const convoRef = doc(db, `conversations_${type}`, convoId);
 
+    let messageValue = message.value;
+
+    // Convert image to base64 string if it's a File object
+
+    if (message.type === 'image' && message.value instanceof File) {
+      try {
+        messageValue = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result); // base64 string
+          reader.onerror = () => reject("Image conversion failed");
+          reader.readAsDataURL(message.value); // base64 with data:image/... prefix
+        });
+      } catch (error) {
+        return thunkAPI.rejectWithValue(error);
+      }
+    }
+
     const msgDoc = {
       msg_id: uuidv4(),
-      data: { type: message.type, value: message.value },
+      data: { type: message.type, value: messageValue },
       timestamp: firestoreTimestamp(),
       user_id: message.user_id,
       delete_for: []

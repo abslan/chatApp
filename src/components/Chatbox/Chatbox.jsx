@@ -85,8 +85,8 @@ export default function Chatbox() {
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const imageUrl = URL.createObjectURL(file); // or upload to storage and get URL
-        const message = { type: 'image', value: imageUrl, user_id: currentUserId };
+        // const imageUrl = URL.createObjectURL(file); // or upload to storage and get URL
+        const message = { type: 'image', value: file, user_id: currentUserId };
         dispatch(sendMessageToFirestore({ convoId, convoType, message }));
         e.target.value = null;
     };
